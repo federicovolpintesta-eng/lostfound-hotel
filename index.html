@@ -9,10 +9,12 @@
 
   <!-- LOGIN -->
   <div id="loginForm" class="login-form">
-    <h2>Iniciar sesión</h2>
-    <input type="email" id="loginEmail" placeholder="Email">
-    <input type="password" id="loginPassword" placeholder="Contraseña">
-    <button onclick="login()">Entrar</button>
+    <div class="login-box">
+      <h2>Iniciar sesión</h2>
+      <input type="email" id="loginEmail" placeholder="Email">
+      <input type="password" id="loginPassword" placeholder="Contraseña">
+      <button onclick="login()">Entrar</button>
+    </div>
   </div>
 
   <!-- APP -->
@@ -28,11 +30,12 @@
     </aside>
 
     <main class="contenido">
-      <header>
+
+      <header class="topbar">
         <h1>Lost & Found</h1>
+        <button onclick="logout()" class="logout-btn">Cerrar sesión</button>
       </header>
 
-      <!-- DASHBOARD -->
       <section class="kpi" id="dashboard">
         <div class="card">
           <p>Pendientes</p>
@@ -44,50 +47,36 @@
         </div>
       </section>
 
-      <!-- OBJETOS PERDIDOS -->
       <section id="lf" style="display:none;">
         <div class="formulario">
-          <div class="form-header">
-            <h3>Nuevo registro</h3>
-            <div class="busqueda-box">
-              <span class="icono">🔍</span>
-              <input 
-                type="text" 
-                id="buscador"
-                placeholder="Buscar habitación, objeto o sector..."
-                onkeyup="filtrarOlvidos()"
-              />
-            </div>
-          </div>
-          <h3>Habitación</h3>
+          <h3 class="nuevo-registro">Nuevo registro</h3>
+
           <input type="text" id="habitacion" placeholder="Habitación">
-          <h3>Objeto</h3>
           <input type="text" id="objeto" placeholder="Objeto">
-          <h3>Sector</h3>
           <input type="text" id="sector" placeholder="Sector">
           <input type="file" id="imagen" accept="image/*">
-          <button onclick="guardarOlvido()">Guardar</button>
+
+          <button onclick="guardarOlvido()" class="btn-guardar">
+            Guardar
+          </button>
         </div>
 
-        <div>
-          <h3>Pendientes</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Hab.</th>
-                <th>Objeto</th>
-                <th>Sector</th>
-                <th>Foto</th>
-                <th>Encontrado</th>
-                <th>Acción</th>
-              </tr>
-            </thead>
-            <tbody id="pendientes"></tbody>
-          </table>
-        </div>
+        <h3>Pendientes</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Hab.</th>
+              <th>Objeto</th>
+              <th>Sector</th>
+              <th>Imagen</th>
+              <th>Fecha</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="pendientes"></tbody>
+        </table>
       </section>
 
-      <!-- REPORTES -->
       <section id="reportes" style="display:none;">
         <h3>Historial</h3>
         <table>
@@ -96,10 +85,9 @@
               <th>Hab.</th>
               <th>Objeto</th>
               <th>Sector</th>
-              <th>Foto</th>
+              <th>Imagen</th>
               <th>Encontrado</th>
               <th>Entregado</th>
-              <th>Acción</th>
             </tr>
           </thead>
           <tbody id="entregados"></tbody>
@@ -109,8 +97,10 @@
     </main>
   </div>
 
+  <!-- SUPABASE CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase.js"></script>
   <script src="app.js"></script>
+
 </body>
 </html>

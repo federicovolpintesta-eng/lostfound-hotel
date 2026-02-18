@@ -1,190 +1,180 @@
-
-// ============================
-// Utilidades
-// ============================
-function fechaHoraActual() {
-  return new Date().toISOString();
-}
-
-function mostrar(seccion) {
-  document.getElementById("dashboard").style.display = "none";
-  document.getElementById("lf").style.display = "none";
-  document.getElementById("reportes").style.display = "none";
-  document.getElementById(seccion).style.display = "block";
-}
-
-function leerImagen(file) {
-  return new Promise(resolve => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.readAsDataURL(file);
-  });
-}
-
-function verImagen(src) {
-  const nueva = window.open("");
-  nueva.document.write(`<img src="${src}" style="width:100%">`);
-}
-
-// ============================
 // LOGIN
-// ============================
 async function login() {
   const email = document.getElementById("loginEmail").value;
   const password = document.getElementById("loginPassword").value;
 
-  if (!email || !password) return alert("Completar email y contraseña");
+  const { error } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password
+  });
 
-  const { data, error } = await window.supabaseClient
-    .from("usuarios")
-    .select("*")
-    .eq("email", email)
-    .eq("password", password)
-    .limit(1)
-    .single();
-
-  if (error || !data) {
-    return alert("Usuario o contraseña incorrectos");
+  if (error) {
+    alert(error.message);
+    return;
   }
 
-  // Mostrar app y ocultar login
   document.getElementById("loginForm").style.display = "none";
   document.getElementById("appContent").style.display = "flex";
-
   cargarOlvidos();
 }
 
-// ============================
-// Lista global de objetos
-// ============================
-let listaOlvidos = [];
+async function logout() {
+  await supabaseClient.auth.signOut();
+  location.reload();
+}
 
-// ============================
-// Guardar olvido
-// ============================
-async function guardarOlvido() {
+// Navegación
+function mostrar(seccion){
+  document.getElementById("dashboard").style.display="none";
+  document.getElementById("lf").style.display="none";
+  document.getElementById("reportes").style.display="none";
+  document.getElementById(seccion).style.display="block";
+}
+
+// GUARDAR OLVIDO CON IMAGEN
+async function guardarOlvido(){
   const habitacion = document.getElementById("habitacion").value;
   const objeto = document.getElementById("objeto").value;
   const sector = document.getElementById("sector").value;
   const file = document.getElementById("imagen").files[0];
 
-  if (!habitacion || !objeto) return alert("Completar datos");
+  let imageUrl = null;
 
-  let imagen = "";
-  if (file) imagen = await leerImagen(file);
+  if(file){
+    const fileName = `${Date.now()}_${file.name}`;
 
-  const { error } = await window.supabaseClient
-    .from("olvidos")
-    .insert([{
-      habitacion,
-      objeto,
-      sector,
-      imagen,
-      fecha_encuentro: fechaHoraActual(),
-      entregado: false
-    }]);
+    const { error: uploadError } = await supabaseClient
+      .storage
+      .from("olvidos")
+      .upload(fileName, file);
 
-  if (error) return alert("Error al guardar");
+    if(uploadError){
+      alert(uploadError.message);
+      return;
+    }
 
-  alert("Objeto registrado");
-  limpiarFormulario();
-  cargarOlvidos();
-}
+    const { data } = supabaseClient
+      .storage
+      .from("olvidos")
+      .getPublicUrl(fileName);
 
-function limpiarFormulario() {
+    imageUrl = data.publicUrl;
+  }
+
+  const { error } = await supabaseClient.from("olvidos").insert([
+    { 
+      habitacion, 
+      objeto, 
+      sector, 
+      entregado: false,
+      fecha_encuentro: new Date(),
+      imagen: imageUrl
+    }
+  ]);
+
+  if(error){
+    alert(error.message);
+    return;
+  }
+
   document.getElementById("habitacion").value = "";
   document.getElementById("objeto").value = "";
   document.getElementById("sector").value = "";
   document.getElementById("imagen").value = "";
-}
-
-// ============================
-// Marcar entregado
-// ============================
-async function marcar(id) {
-  const { error } = await window.supabaseClient
-    .from("olvidos")
-    .update({ entregado: true, fecha_entrega: fechaHoraActual() })
-    .eq("id", id);
-
-  if (error) return alert("Error al actualizar");
 
   cargarOlvidos();
 }
 
-// ============================
-// Borrar
-// ============================
-async function borrar(id) {
-  if (!confirm("¿Desea borrar este registro?")) return;
-
-  const { error } = await window.supabaseClient
-    .from("olvidos")
-    .delete()
-    .eq("id", id);
-
-  if (error) return alert("Error al borrar");
-
-  cargarOlvidos();
-}
-
-// ============================
-// Render tablas
-// ============================
-function renderOlvidos(data) {
-  const pendientes = document.getElementById("pendientes");
-  const entregados = document.getElementById("entregados");
-  pendientes.innerHTML = "";
-  entregados.innerHTML = "";
-
-  let cantPendientes = 0, cantEntregados = 0;
-
-  data.forEach(o => {
-    const fila = `
-      <tr>
-        <td>${o.habitacion}</td>
-        <td>${o.objeto}</td>
-        <td>${o.sector}</td>
-        <td>${o.imagen ? `<img src="${o.imagen}" class="mini" onclick="verImagen('${o.imagen}')">` : "-"}</td>
-        <td>${new Date(o.fecha_encuentro).toLocaleString()}</td>
-        <td>${o.entregado ? new Date(o.fecha_entrega).toLocaleString() : ""}</td>
-        <td>
-          ${o.entregado ? `<button onclick="borrar(${o.id})">Borrar</button>` : `<button onclick="marcar(${o.id})">Entregar</button> <button onclick="borrar(${o.id})">Borrar</button>`}
-        </td>
-      </tr>
-    `;
-    if(o.entregado){ entregados.innerHTML += fila; cantEntregados++; }
-    else{ pendientes.innerHTML += fila; cantPendientes++; }
-  });
-
-  document.getElementById("kpiPendientes").textContent = cantPendientes;
-  document.getElementById("kpiEntregados").textContent = cantEntregados;
-}
-
-// ============================
-// Cargar desde BD
-// ============================
-async function cargarOlvidos() {
-  const { data, error } = await window.supabaseClient
+// CARGAR DATOS
+async function cargarOlvidos(){
+  const { data, error } = await supabaseClient
     .from("olvidos")
     .select("*")
-    .order("fecha_encuentro", { ascending: false });
+    .order("created_at",{ascending:false});
 
-  if(error){ console.error(error); return; }
+  if(error){
+    alert(error.message);
+    return;
+  }
 
-  listaOlvidos = data;
-  renderOlvidos(listaOlvidos);
+  const pendientes = document.getElementById("pendientes");
+  const entregados = document.getElementById("entregados");
+
+  pendientes.innerHTML="";
+  entregados.innerHTML="";
+
+  let p=0;
+  let e=0;
+
+  data.forEach(item=>{
+    const fila=document.createElement("tr");
+
+    if(item.entregado === false){
+      p++;
+      fila.innerHTML=`
+        <td>${item.habitacion}</td>
+        <td>${item.objeto}</td>
+        <td>${item.sector}</td>
+        <td>
+          ${item.imagen ? `<img src="${item.imagen}" width="60">` : "—"}
+        </td>
+        <td>${item.fecha_encuentro ? new Date(item.fecha_encuentro).toLocaleString() : "—"}</td>
+        <td class="acciones">
+          <button class="btn-entregar" onclick="entregar(${item.id})">Entregar</button>
+          <button class="btn-borrar" onclick="borrar(${item.id})">Borrar</button>
+        </td>
+      `;
+      pendientes.appendChild(fila);
+    }
+
+    if(item.entregado === true){
+      e++;
+      fila.innerHTML=`
+        <td>${item.habitacion}</td>
+        <td>${item.objeto}</td>
+        <td>${item.sector}</td>
+        <td>
+          ${item.imagen ? `<img src="${item.imagen}" width="60">` : "—"}
+        </td>
+        <td>${item.fecha_encuentro ? new Date(item.fecha_encuentro).toLocaleString() : "—"}</td>
+        <td>${item.fecha_entrega ? new Date(item.fecha_entrega).toLocaleString() : "—"}</td>
+      `;
+      entregados.appendChild(fila);
+    }
+  });
+
+  document.getElementById("kpiPendientes").innerText=p;
+  document.getElementById("kpiEntregados").innerText=e;
 }
 
-// ============================
-// Filtrar
-// ============================
-function filtrarOlvidos() {
-  const texto = document.getElementById("buscador").value.toLowerCase();
-  const filtrados = listaOlvidos.filter(o =>
-    (o.habitacion||"").toLowerCase().includes(texto) ||
-    (o.objeto||"").toLowerCase().includes(texto) ||
-    (o.sector||"").toLowerCase().includes(texto)
-  );
-  renderOlvidos(filtrados);
+// ENTREGAR
+async function entregar(id){
+  await supabaseClient
+    .from("olvidos")
+    .update({
+      entregado: true,
+      fecha_entrega: new Date()
+    })
+    .eq("id",id);
+
+  cargarOlvidos();
 }
+
+// BORRAR
+async function borrar(id){
+  await supabaseClient
+    .from("olvidos")
+    .delete()
+    .eq("id",id);
+
+  cargarOlvidos();
+}
+
+// AUTO SESIÓN
+supabaseClient.auth.getSession().then(({data})=>{
+  if(data.session){
+    document.getElementById("loginForm").style.display="none";
+    document.getElementById("appContent").style.display="flex";
+    cargarOlvidos();
+  }
+});
