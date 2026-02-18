@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>L&F - Objetos Olvidados (Demo Segura)</title>
+  <link rel="stylesheet" href="styles.css?v=3">
+</head>
+<body>
+  <div class="app">
+
+    <aside class="sidebar">
+      <h2>Hotel System</h2>
+      <ul>
+        <li onclick="mostrar('dashboard')">Dashboard</li>
+        <li onclick="mostrar('lf')">Objetos Perdidos</li>
+        <li onclick="mostrar('reportes')">Reportes</li>
+        <li onclick="logout()">Salir</li>
+      </ul>
+    </aside>
+
+    <main class="contenido">
+
+      <!-- LOGIN -->
+      <section id="login">
+        <h1>Login Lost & Found (Demo Segura)</h1>
+        <div class="formulario">
+          <input type="email" id="email" placeholder="Email">
+          <input type="password" id="password" placeholder="Contraseña">
+          <button onclick="login()">Ingresar</button>
+        </div>
+      </section>
+
+      <!-- DASHBOARD -->
+      <section class="kpi" id="dashboard" style="display:none;">
+        <div class="card">
+          <p>Pendientes</p>
+          <span id="kpiPendientes">0</span>
+        </div>
+        <div class="card">
+          <p>Entregados</p>
+          <span id="kpiEntregados">0</span>
+        </div>
+      </section>
+
+      <!-- OBJETOS PERDIDOS -->
+      <section id="lf" style="display:none;">
+        <div class="formulario">
+          <h3>Nuevo registro</h3>
+          <input type="text" id="habitacion" placeholder="Habitación">
+          <input type="text" id="objeto" placeholder="Objeto">
+          <input type="text" id="sector" placeholder="Sector">
+          <input type="file" id="imagen" accept="image/*">
+          <button onclick="guardarOlvido()">Guardar</button>
+        </div>
+
+        <h3>Pendientes</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Hab.</th>
+              <th>Objeto</th>
+              <th>Sector</th>
+              <th>Foto</th>
+              <th>Encontrado</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="pendientes"></tbody>
+        </table>
+      </section>
+
+      <!-- REPORTES -->
+      <section id="reportes" style="display:none;">
+        <h3>Historial</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Hab.</th>
+              <th>Objeto</th>
+              <th>Sector</th>
+              <th>Foto</th>
+              <th>Encontrado</th>
+              <th>Entregado</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="entregados"></tbody>
+        </table>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js?v=3"></script>
+</body>
+</html>

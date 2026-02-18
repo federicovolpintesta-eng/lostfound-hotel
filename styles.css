@@ -1,0 +1,119 @@
+body{
+  margin:0;
+  font-family:Arial, Helvetica, sans-serif;
+  background:#f4f6f8;
+}
+
+.app{
+  display:flex;
+  height:100vh;
+}
+
+/* SIDEBAR */
+.sidebar{
+  width:220px;
+  background:#1f2937;
+  color:white;
+  padding:20px;
+}
+
+.sidebar h2{
+  margin-top:0;
+}
+
+.sidebar ul{
+  list-style:none;
+  padding:0;
+}
+
+.sidebar li{
+  padding:10px;
+  cursor:pointer;
+  border-radius:6px;
+}
+
+.sidebar li:hover{
+  background:#374151;
+}
+
+/* CONTENIDO */
+.contenido{
+  flex:1;
+  padding:20px;
+  overflow:auto;
+}
+
+header{
+  margin-bottom:20px;
+}
+
+/* KPI */
+.kpi{
+  display:flex;
+  gap:20px;
+}
+
+.card{
+  background:white;
+  padding:20px;
+  border-radius:10px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
+
+/* FORMULARIO */
+.formulario{
+  background:white;
+  padding:20px;
+  border-radius:10px;
+  margin-bottom:20px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
+
+.formulario input{
+  display:block;
+  width:100%;
+  margin-bottom:10px;
+  padding:8px;
+}
+
+.formulario button{
+  padding:10px;
+  background:#2563eb;
+  color:white;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.formulario button:hover{
+  background:#1d4ed8;
+}
+
+/* TABLAS */
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:white;
+  border-radius:10px;
+  overflow:hidden;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
+
+th, td{
+  padding:10px;
+  border-bottom:1px solid #eee;
+  text-align:left;
+}
+
+.mini{
+  width:40px;
+  cursor:pointer;
+}
+
+button{
+  cursor:pointer;
+}
+
+button:hover{
+  opacity:0.8;
+}
