@@ -2,12 +2,21 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>L&F - Objetos Olvidados</title>
+  <title>Lost & Found - Hotel</title>
   <link rel="stylesheet" href="styles.css">
 </head>
-
 <body>
-  <div class="app">
+
+  <!-- LOGIN -->
+  <div id="loginForm" class="login-form">
+    <h2>Iniciar sesión</h2>
+    <input type="email" id="loginEmail" placeholder="Email">
+    <input type="password" id="loginPassword" placeholder="Contraseña">
+    <button onclick="login()">Entrar</button>
+  </div>
+
+  <!-- APP -->
+  <div id="appContent" class="app" style="display:none;">
 
     <aside class="sidebar">
       <h2>Hotel System</h2>
@@ -37,12 +46,9 @@
 
       <!-- OBJETOS PERDIDOS -->
       <section id="lf" style="display:none;">
-
         <div class="formulario">
-
           <div class="form-header">
             <h3>Nuevo registro</h3>
-
             <div class="busqueda-box">
               <span class="icono">🔍</span>
               <input 
@@ -53,7 +59,6 @@
               />
             </div>
           </div>
-
           <h3>Habitación</h3>
           <input type="text" id="habitacion" placeholder="Habitación">
           <h3>Objeto</h3>
@@ -61,7 +66,7 @@
           <h3>Sector</h3>
           <input type="text" id="sector" placeholder="Sector">
           <input type="file" id="imagen" accept="image/*">
-          <button type="button" onclick="guardarOlvido()">Guardar</button>
+          <button onclick="guardarOlvido()">Guardar</button>
         </div>
 
         <div>
@@ -80,7 +85,6 @@
             <tbody id="pendientes"></tbody>
           </table>
         </div>
-
       </section>
 
       <!-- REPORTES -->
@@ -95,6 +99,7 @@
               <th>Foto</th>
               <th>Encontrado</th>
               <th>Entregado</th>
+              <th>Acción</th>
             </tr>
           </thead>
           <tbody id="entregados"></tbody>
@@ -104,11 +109,8 @@
     </main>
   </div>
 
-  <!-- Librería Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- Inicialización Supabase -->
-  <script src="supabase.js?v=1"></script>
-  <!-- Lógica de la app -->
-  <script src="app.js?v=1"></script>
+  <script src="supabase.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
