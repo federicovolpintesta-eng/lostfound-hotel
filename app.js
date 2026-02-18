@@ -6,7 +6,6 @@ function fechaHoraActual() {
 }
 
 function mostrar(seccion) {
-  document.getElementById("login").style.display = "none";
   document.getElementById("dashboard").style.display = "none";
   document.getElementById("lf").style.display = "none";
   document.getElementById("reportes").style.display = "none";
@@ -15,7 +14,7 @@ function mostrar(seccion) {
 }
 
 function leerImagen(file) {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
     reader.readAsDataURL(file);
@@ -28,41 +27,12 @@ function verImagen(src) {
 }
 
 // ============================
-// LOGIN (solo usuarios de prueba)
-// ============================
-let usuarioActual = null;
-
-// Usuarios permitidos demo
-const USUARIOS_DEMO = [
-  { email: "gobernanta@lospinoshotel.com.ar", password: "LosPinos1234", nombre:"Sandra Lencina" },
-  { email: "msotelo@lospinoshotel.com.ar", password: "LosPinos5678", nombre:"Marcelo Sotelo" }
-];
-
-function login() {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
-
-  const usuario = USUARIOS_DEMO.find(u => u.email === email && u.password === password);
-  if(!usuario) return alert("Email o contraseña incorrectos");
-
-  usuarioActual = usuario;
-  alert(`Bienvenido ${usuario.nombre}`);
-  mostrar("dashboard");
-  cargarOlvidos();
-}
-
-function logout() {
-  usuarioActual = null;
-  mostrar("login");
-}
-
-// ============================
-// LISTA GLOBAL
+// LISTA GLOBAL (para filtrar)
 // ============================
 let listaOlvidos = [];
 
 // ============================
-// GUARDAR OBJETO
+// GUARDAR
 // ============================
 async function guardarOlvido() {
   const habitacion = document.getElementById("habitacion").value;
@@ -70,19 +40,32 @@ async function guardarOlvido() {
   const sector = document.getElementById("sector").value;
   const file = document.getElementById("imagen").files[0];
 
-  if(!habitacion || !objeto) return alert("Completar datos");
+  if (!habitacion || !objeto) return alert("Completar datos");
 
   let imagen = "";
-  if(file) imagen = await leerImagen(file);
+  if (file) imagen = await leerImagen(file);
 
   const { error } = await window.supabaseClient
     .from("olvidos")
-    .insert([{ habitacion, objeto, sector, imagen, fecha_encuentro: fechaHoraActual(), entregado:false }]);
+    .insert([
+      {
+        habitacion,
+        objeto,
+        sector,
+        imagen,
+        fecha_encuentro: fechaHoraActual(),
+        entregado: false,
+      },
+    ]);
 
-  if(error) return alert("Error al guardar");
-
-  limpiarFormulario();
-  cargarOlvidos();
+  if (error) {
+    console.error(error);
+    alert("Error al guardar");
+  } else {
+    alert("Objeto registrado");
+    limpiarFormulario();
+    cargarOlvidos();
+  }
 }
 
 function limpiarFormulario() {
@@ -98,24 +81,17 @@ function limpiarFormulario() {
 async function marcar(id) {
   const { error } = await window.supabaseClient
     .from("olvidos")
-    .update({ entregado:true, fecha_entrega: fechaHoraActual() })
+    .update({
+      entregado: true,
+      fecha_entrega: fechaHoraActual(),
+    })
     .eq("id", id);
 
-  if(error) return alert("Error al actualizar");
-  cargarOlvidos();
-}
-
-// ============================
-// BORRAR REGISTRO
-// ============================
-async function borrar(id) {
-  if(!confirm("¿Seguro que quieres borrar este registro?")) return;
-  const { error } = await window.supabaseClient
-    .from("olvidos")
-    .delete()
-    .eq("id", id);
-  if(error) return alert("Error al borrar registro");
-  cargarOlvidos();
+  if (error) {
+    alert("Error al actualizar");
+  } else {
+    cargarOlvidos();
+  }
 }
 
 // ============================
@@ -131,20 +107,21 @@ function renderOlvidos(data) {
   let cantPendientes = 0;
   let cantEntregados = 0;
 
-  data.forEach(o => {
-    if(o.entregado){
+  data.forEach((o) => {
+    if (o.entregado) {
       cantEntregados++;
       entregados.innerHTML += `
         <tr>
           <td>${o.habitacion}</td>
           <td>${o.objeto}</td>
           <td>${o.sector}</td>
-          <td>${o.imagen ? `<img src="${o.imagen}" class="mini" onclick="verImagen('${o.imagen}')">` : "-"}</td>
+          <td>${
+            o.imagen
+              ? `<img src="${o.imagen}" class="mini" onclick="verImagen('${o.imagen}')">`
+              : "-"
+          }</td>
           <td>${new Date(o.fecha_encuentro).toLocaleString()}</td>
           <td>${new Date(o.fecha_entrega).toLocaleString()}</td>
-          <td>
-            <button onclick="borrar(${o.id})" style="background:red;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;">Borrar</button>
-          </td>
         </tr>
       `;
     } else {
@@ -154,12 +131,13 @@ function renderOlvidos(data) {
           <td>${o.habitacion}</td>
           <td>${o.objeto}</td>
           <td>${o.sector}</td>
-          <td>${o.imagen ? `<img src="${o.imagen}" class="mini" onclick="verImagen('${o.imagen}')">` : "-"}</td>
+          <td>${
+            o.imagen
+              ? `<img src="${o.imagen}" class="mini" onclick="verImagen('${o.imagen}')">`
+              : "-"
+          }</td>
           <td>${new Date(o.fecha_encuentro).toLocaleString()}</td>
-          <td>
-            <button onclick="marcar(${o.id})">Entregar</button>
-            <button onclick="borrar(${o.id})" style="background:red;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;margin-left:5px;">Borrar</button>
-          </td>
+          <td><button onclick="marcar(${o.id})">Entregar</button></td>
         </tr>
       `;
     }
@@ -176,16 +154,39 @@ async function cargarOlvidos() {
   const { data, error } = await window.supabaseClient
     .from("olvidos")
     .select("*")
-    .order("fecha_encuentro", { ascending:false });
+    .order("fecha_encuentro", { ascending: false });
 
-  if(error) return console.error(error);
+  if (error) {
+    console.error(error);
+    return;
+  }
+
   listaOlvidos = data;
   renderOlvidos(listaOlvidos);
+}
+
+// ============================
+// FILTRAR
+// ============================
+function filtrarOlvidos() {
+  const texto = document
+    .getElementById("buscador")
+    .value
+    .toLowerCase();
+
+  const filtrados = listaOlvidos.filter((o) =>
+    (o.habitacion || "").toString().toLowerCase().includes(texto) ||
+    (o.objeto || "").toLowerCase().includes(texto) ||
+    (o.sector || "").toLowerCase().includes(texto)
+  );
+
+  renderOlvidos(filtrados);
 }
 
 // ============================
 // INIT
 // ============================
 document.addEventListener("DOMContentLoaded", () => {
-  mostrar("login");
+  mostrar("dashboard");
+  cargarOlvidos();
 });

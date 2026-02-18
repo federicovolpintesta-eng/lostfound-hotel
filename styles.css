@@ -89,6 +89,35 @@ header{
   background:#1d4ed8;
 }
 
+/* HEADER FORM + BUSQUEDA */
+.form-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:15px;
+}
+
+.busqueda-box{
+  position:relative;
+  right: 100px;
+  width: 17%;
+}
+
+.busqueda-box input{
+  padding:8px 10px 8px 30px;
+  border-radius:6px;
+  border:1px solid #ccc;
+}
+
+.icono{
+  position:absolute;
+  left:8px;
+  top:50%;
+  transform:translateY(-50%);
+  font-size:14px;
+  opacity:0.6;
+}
+
 /* TABLAS */
 table{
   width:100%;
@@ -108,12 +137,4 @@ th, td{
 .mini{
   width:40px;
   cursor:pointer;
-}
-
-button{
-  cursor:pointer;
-}
-
-button:hover{
-  opacity:0.8;
 }
