@@ -16,7 +16,7 @@ body{
 }
 
 .login-form input{
-  width:100%;
+  width:90%;
   padding:10px;
   margin-bottom:15px;
   border-radius:6px;
@@ -161,5 +161,38 @@ h3{
 }
 
 .nuevo-registro{
-  color: black
+  color: black;
 }
+
+.header-registro {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.search-container {
+  position: relative;
+}
+
+.search-container input {
+  padding: 8px 10px 8px 35px;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+  outline: none;
+  width: 200px;
+  transition: 0.3s;
+}
+
+.search-container input:focus {
+  border-color: #4a90e2;
+}
+
+.search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+}
+

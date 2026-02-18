@@ -23,6 +23,17 @@ async function logout() {
   location.reload();
 }
 
+// 🔍 BUSCADOR FUNCIONAL
+function buscarOlvidos() {
+  const input = document.getElementById("searchInput").value.toLowerCase();
+  const filas = document.querySelectorAll("#pendientes tr");
+
+  filas.forEach(fila => {
+    const texto = fila.innerText.toLowerCase();
+    fila.style.display = texto.includes(input) ? "" : "none";
+  });
+}
+
 // Navegación
 function mostrar(seccion){
   document.getElementById("dashboard").style.display="none";

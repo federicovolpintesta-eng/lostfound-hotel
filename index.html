@@ -36,6 +36,7 @@
         <button onclick="logout()" class="logout-btn">Cerrar sesión</button>
       </header>
 
+      <!-- DASHBOARD -->
       <section class="kpi" id="dashboard">
         <div class="card">
           <p>Pendientes</p>
@@ -47,9 +48,23 @@
         </div>
       </section>
 
+      <!-- OBJETOS PERDIDOS -->
       <section id="lf" style="display:none;">
         <div class="formulario">
-          <h3 class="nuevo-registro">Nuevo registro</h3>
+          
+          <div class="header-registro">
+            <h2>Nuevo registro</h2>
+
+            <div class="search-container">
+              <span class="search-icon">🔍</span>
+              <input 
+                type="text" 
+                id="searchInput" 
+                placeholder="Buscar..."
+                onkeyup="buscarOlvidos()"
+              />
+            </div>
+          </div>
 
           <input type="text" id="habitacion" placeholder="Habitación">
           <input type="text" id="objeto" placeholder="Objeto">
@@ -77,6 +92,7 @@
         </table>
       </section>
 
+      <!-- REPORTES -->
       <section id="reportes" style="display:none;">
         <h3>Historial</h3>
         <table>
