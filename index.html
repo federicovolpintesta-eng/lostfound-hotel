@@ -1,122 +1,131 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Lost & Found - Hotel</title>
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lost & Found | Los Pinos & Tremun</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="supabase.js"></script>
+    <script defer src="app.js"></script>
 </head>
 <body>
 
-  <!-- LOGIN -->
-  <div id="loginForm" class="login-form">
-    <div class="login-box">
-      <h2>Iniciar sesión</h2>
-      <input type="email" id="loginEmail" placeholder="Email">
-      <input type="password" id="loginPassword" placeholder="Contraseña">
-      <button onclick="login()">Entrar</button>
-    </div>
-  </div>
-
-  <!-- APP -->
-  <div id="appContent" class="app" style="display:none;">
-
-    <aside class="sidebar">
-      <h2>Hotel System</h2>
-      <ul>
-        <li onclick="mostrar('dashboard')">Dashboard</li>
-        <li onclick="mostrar('lf')">Objetos Perdidos</li>
-        <li onclick="mostrar('reportes')">Reportes</li>
-      </ul>
-    </aside>
-
-    <main class="contenido">
-
-      <header class="topbar">
-        <h1>Lost & Found</h1>
-        <button onclick="logout()" class="logout-btn">Cerrar sesión</button>
-      </header>
-
-      <!-- DASHBOARD -->
-      <section class="kpi" id="dashboard">
-        <div class="card">
-          <p>Pendientes</p>
-          <span id="kpiPendientes">0</span>
-        </div>
-        <div class="card">
-          <p>Entregados</p>
-          <span id="kpiEntregados">0</span>
-        </div>
-      </section>
-
-      <!-- OBJETOS PERDIDOS -->
-      <section id="lf" style="display:none;">
-        <div class="formulario">
-          
-          <div class="header-registro">
-            <h2>Nuevo registro</h2>
-
-            <div class="search-container">
-              <span class="search-icon">🔍</span>
-              <input 
-                type="text" 
-                id="searchInput" 
-                placeholder="Buscar..."
-                onkeyup="buscarOlvidos()"
-              />
+    <div id="loginBox" class="login-box">
+        <div class="login-card">
+            <div class="dual-logos-login">
+                <img src="img/los-pinos.png" alt="Los Pinos">
+                <img src="img/tremun.jpeg" alt="Tremun">
             </div>
-          </div>
-
-          <input type="text" id="habitacion" placeholder="Habitación">
-          <input type="text" id="objeto" placeholder="Objeto">
-          <input type="text" id="sector" placeholder="Sector">
-          <input type="file" id="imagen" accept="image/*">
-
-          <button onclick="guardarOlvido()" class="btn-guardar">
-            Guardar
-          </button>
+            <h1>Control de Hallazgos</h1>
+            <div class="login-form-stack">
+                <input type="email" id="loginEmail" placeholder="Usuario">
+                <input type="password" id="loginPassword" placeholder="Contraseña">
+                <button onclick="login()" class="btn-login-action">Ingresar al Sistema</button>
+            </div>
         </div>
+    </div>
 
-        <h3>Pendientes</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Hab.</th>
-              <th>Objeto</th>
-              <th>Sector</th>
-              <th>Imagen</th>
-              <th>Fecha</th>
-              <th>Acción</th>
-            </tr>
-          </thead>
-          <tbody id="pendientes"></tbody>
-        </table>
-      </section>
+    <div id="app" style="display:none">
+        <header class="header-main">
+            <div class="logos-nav">
+                <img src="img/los-pinos.png" class="logo-h">
+                <img src="img/tremun.jpeg" class="logo-h">
+            </div>
+            <button onclick="location.reload()" class="btn-cerrar">Cerrar Sesión</button>
+        </header>
 
-      <!-- REPORTES -->
-      <section id="reportes" style="display:none;">
-        <h3>Historial</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Hab.</th>
-              <th>Objeto</th>
-              <th>Sector</th>
-              <th>Imagen</th>
-              <th>Encontrado</th>
-              <th>Entregado</th>
-            </tr>
-          </thead>
-          <tbody id="entregados"></tbody>
-        </table>
-      </section>
+        <div class="content">
+            <div class="stats-row">
+                <div class="stat-card blue">
+                    <span class="stat-label">TOTAL REGISTROS</span>
+                    <h2 class="stat-value" id="totalObjetos">0</h2>
+                </div>
+                <div class="stat-card yellow">
+                    <span class="stat-label">EN CUSTODIA</span>
+                    <h2 class="stat-value" id="enCustodiaCount">0</h2>
+                </div>
+                <div class="stat-card green">
+                    <span class="stat-label">EFICACIA DEVOLUCIÓN</span>
+                    <h2 class="stat-value" id="tasaRetorno">0%</h2>
+                </div>
+                <div class="stat-card cyan">
+                    <span class="stat-label">ENTREGADOS</span>
+                    <h2 class="stat-value" id="entregadosCount">0</h2>
+                </div>
+                <div class="stat-card red">
+                    <span class="stat-label">OBJETOS CRÍTICOS</span>
+                    <h2 class="stat-value" id="donacionCount">0</h2>
+                </div>
+                <div class="stat-card-chart">
+                    <div class="chart-container">
+                        <canvas id="chartSectores"></canvas>
+                    </div>
+                    <div id="leyendaSectores" class="chart-legend"></div>
+                </div>
+            </div>
 
-    </main>
-  </div>
+            <div class="form-strip">
+                <input id="habitacion" placeholder="Hab / Ubicación">
+                <input id="objeto" placeholder="Descripción del Objeto">
+                <select id="sector">
+                    <option value="Areas Publicas">Áreas Públicas</option>
+                    <option value="Habitaciones">Habitaciones</option>
+                    <option value="A&B">A&B</option>
+                    <option value="Pileta">Pileta</option>
+                    <option value="Spa">Spa & Salud</option>
+                    <option value="Recreacion">Recreación</option>
+                </select>
+                <select id="prioridad">
+                    <option value="Baja">Prioridad: Baja (Ropa, botellas, etc)</option>
+                    <option value="Media">Prioridad: Media (Cargadores, anteojos)</option>
+                    <option value="Alta">Prioridad: ALTA (Celulares, Relojes, Joyas)</option>
+                </select>
+                <label for="file-upload" class="btn-foto-ui">
+                    <span>📸</span> <span id="btnFotoLabel">Foto</span>
+                </label>
+                <input type="file" id="file-upload" accept="image/*" style="display:none;">
+                <button onclick="guardar()" class="btn-registrar">Registrar Hallazgo</button>
+            </div>
 
-  <!-- SUPABASE CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase.js"></script>
-  <script src="app.js"></script>
+            <div class="search-container-pro">
+                <div class="search-wrapper">
+                    <span class="search-magnifier">🔍</span>
+                    <input type="text" id="searchInput" placeholder="Buscar por objeto, habitación o sector..." oninput="buscarReal()">
+                </div>
+            </div>
+            
 
+            <div class="table-controls-professional">
+                <div class="tab-pill-container">
+                    <button id="tabPendientes" class="pill-link active" onclick="switchTab('pendientes')">Custodia</button>
+                    <button id="tabHistorial" class="pill-link" onclick="switchTab('historial')">Entregados</button>
+                    <button id="tabDonaciones" class="pill-link" onclick="switchTab('donaciones')">Para Donación</button>
+                </div>
+                <div class="export-pill-container">
+                    <button onclick="exportExcel()" class="btn-export xls">Excel</button>
+                    <button onclick="exportPDF()" class="btn-export pdf">Reporte PDF</button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table id="tablaPrincipal">
+                    <thead id="cabeceraTabla"></thead>
+                    <tbody id="cuerpoTabla"></tbody>
+                </table>
+                <div id="loadMoreContainer" style="text-align: center; padding: 20px;">
+                    <button onclick="cargar(false)" class="pill-link" style="background: var(--navy); color: white; border: none; cursor: pointer;">
+                        Cargar más registros antiguos
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalFoto" class="modal" onclick="this.style.display='none'"><img id="imgGrande" src=""></div>
 </body>
 </html>
