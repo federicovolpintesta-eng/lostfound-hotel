@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: lost-and-found-hotel
+    env: static
+    buildCommand: ""
+    staticPublishPath: ./
