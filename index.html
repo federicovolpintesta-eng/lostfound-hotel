@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lost & Found | Los Pinos & Tremun</title>
+    <title>Lost & Found | Premium</title>
+    <!-- Premium Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -15,13 +17,25 @@
 </head>
 <body>
 
+    <!-- Cinematic Photographic Background -->
+    <div class="cinematic-bg">
+        <!-- Imágenes de stock de lujo (Unsplash) -->
+        <div class="slideshow-image slide-1"></div>
+        <div class="slideshow-image slide-2"></div>
+        <div class="slideshow-image slide-3"></div>
+    </div>
+    <div class="cinematic-overlay"></div>
+
+    <!-- Capa de ruido sutil para textura -->
+    <div class="noise-overlay"></div>
+
     <div id="loginBox" class="login-box">
-        <div class="login-card">
+        <div class="login-card glass-panel">
             <div class="dual-logos-login">
                 <img src="img/los-pinos.png" alt="Los Pinos">
                 <img src="img/tremun.jpeg" alt="Tremun">
             </div>
-            <h1>Control de Hallazgos</h1>
+            <h1>Lost & Found</h1>
             <div class="login-form-stack">
                 <input type="email" id="loginEmail" placeholder="Usuario">
                 <input type="password" id="loginPassword" placeholder="Contraseña">
@@ -31,7 +45,7 @@
     </div>
 
     <div id="app" style="display:none">
-        <header class="header-main">
+        <header class="header-main glass-panel">
             <div class="logos-nav">
                 <img src="img/los-pinos.png" class="logo-h">
                 <img src="img/tremun.jpeg" class="logo-h">
@@ -41,27 +55,27 @@
 
         <div class="content">
             <div class="stats-row">
-                <div class="stat-card blue">
+                <div class="stat-card glass-panel blue">
                     <span class="stat-label">TOTAL REGISTROS</span>
                     <h2 class="stat-value" id="totalObjetos">0</h2>
                 </div>
-                <div class="stat-card yellow">
+                <div class="stat-card glass-panel yellow">
                     <span class="stat-label">EN CUSTODIA</span>
                     <h2 class="stat-value" id="enCustodiaCount">0</h2>
                 </div>
-                <div class="stat-card green">
+                <div class="stat-card glass-panel green">
                     <span class="stat-label">EFICACIA DEVOLUCIÓN</span>
                     <h2 class="stat-value" id="tasaRetorno">0%</h2>
                 </div>
-                <div class="stat-card cyan">
+                <div class="stat-card glass-panel cyan">
                     <span class="stat-label">ENTREGADOS</span>
                     <h2 class="stat-value" id="entregadosCount">0</h2>
                 </div>
-                <div class="stat-card red">
+                <div class="stat-card glass-panel red">
                     <span class="stat-label">OBJETOS CRÍTICOS</span>
                     <h2 class="stat-value" id="donacionCount">0</h2>
                 </div>
-                <div class="stat-card-chart">
+                <div class="stat-card-chart glass-panel">
                     <div class="chart-container">
                         <canvas id="chartSectores"></canvas>
                     </div>
@@ -69,7 +83,7 @@
                 </div>
             </div>
 
-            <div class="form-strip">
+            <div class="form-strip glass-panel">
                 <input id="habitacion" placeholder="Hab / Ubicación">
                 <input id="objeto" placeholder="Descripción del Objeto">
                 <select id="sector">
@@ -81,44 +95,46 @@
                     <option value="Recreacion">Recreación</option>
                 </select>
                 <select id="prioridad">
-                    <option value="Baja">Prioridad: Baja (Ropa, botellas, etc)</option>
-                    <option value="Media">Prioridad: Media (Cargadores, anteojos)</option>
-                    <option value="Alta">Prioridad: ALTA (Celulares, Relojes, Joyas)</option>
+                    <option value="Baja">Prioridad: Baja (Ropa, botellas)</option>
+                    <option value="Media">Prioridad: Media (Cargadores)</option>
+                    <option value="Alta">Prioridad: ALTA (Celulares, Joyas)</option>
                 </select>
+                
+                <img id="previewFoto">
                 <label for="file-upload" class="btn-foto-ui">
-                    <span>📸</span> <span id="btnFotoLabel">Foto</span>
+                    <span>📸</span> <span id="btnFotoLabel">Adjuntar</span>
                 </label>
                 <input type="file" id="file-upload" accept="image/*" style="display:none;">
+                
                 <button onclick="guardar()" class="btn-registrar">Registrar Hallazgo</button>
             </div>
 
             <div class="search-container-pro">
-                <div class="search-wrapper">
+                <div class="search-wrapper glass-panel">
                     <span class="search-magnifier">🔍</span>
                     <input type="text" id="searchInput" placeholder="Buscar por objeto, habitación o sector..." oninput="buscarReal()">
                 </div>
             </div>
             
-
             <div class="table-controls-professional">
-                <div class="tab-pill-container">
+                <div class="tab-pill-container glass-panel">
                     <button id="tabPendientes" class="pill-link active" onclick="switchTab('pendientes')">Custodia</button>
                     <button id="tabHistorial" class="pill-link" onclick="switchTab('historial')">Entregados</button>
-                    <button id="tabDonaciones" class="pill-link" onclick="switchTab('donaciones')">Para Donación</button>
+                    <button id="tabDonaciones" class="pill-link" onclick="switchTab('donaciones')">Donación</button>
                 </div>
                 <div class="export-pill-container">
-                    <button onclick="exportExcel()" class="btn-export xls">Excel</button>
-                    <button onclick="exportPDF()" class="btn-export pdf">Reporte PDF</button>
+                    <button onclick="exportExcel()" class="btn-export xls glass-panel">📥 Excel</button>
+                    <button onclick="exportPDF()" class="btn-export pdf glass-panel">📄 Reporte PDF</button>
                 </div>
             </div>
 
-            <div class="table-container">
+            <div class="table-container glass-panel">
                 <table id="tablaPrincipal">
                     <thead id="cabeceraTabla"></thead>
                     <tbody id="cuerpoTabla"></tbody>
                 </table>
                 <div id="loadMoreContainer" style="text-align: center; padding: 20px;">
-                    <button onclick="cargar(false)" class="pill-link" style="background: var(--navy); color: white; border: none; cursor: pointer;">
+                    <button onclick="cargar(false)" class="pill-link glass-panel" style="color: var(--text-main); cursor: pointer;">
                         Cargar más registros antiguos
                     </button>
                 </div>
@@ -126,6 +142,37 @@
         </div>
     </div>
 
+    <!-- Image Modal -->
     <div id="modalFoto" class="modal" onclick="this.style.display='none'"><img id="imgGrande" src=""></div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Custom Modal para Input (Entregar) -->
+    <div id="inputModal" class="custom-modal-overlay">
+        <div class="custom-modal-box glass-panel-modal">
+            <div class="custom-modal-header" id="inputModalTitle">Título</div>
+            <div class="custom-modal-body" id="inputModalDesc">Descripción</div>
+            <input type="text" id="inputModalInput" class="custom-modal-input" autocomplete="off">
+            <div class="custom-modal-footer">
+                <button class="btn-modal-cancel" onclick="closeInputModal()">Cancelar</button>
+                <button class="btn-modal-confirm" id="inputModalConfirmBtn">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Modal para Confirmación (Eliminar) -->
+    <div id="confirmModal" class="custom-modal-overlay">
+        <div class="custom-modal-box glass-panel-modal">
+            <div class="custom-modal-header" id="confirmModalTitle">Título</div>
+            <div class="custom-modal-body" id="confirmModalDesc">Descripción</div>
+            <input type="password" id="confirmModalInput" class="custom-modal-input" placeholder="Contraseña de seguridad" autocomplete="new-password">
+            <div class="custom-modal-footer">
+                <button class="btn-modal-cancel" onclick="closeConfirmModal()">Cancelar</button>
+                <button class="btn-modal-confirm btn-modal-danger" id="confirmModalConfirmBtn">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
