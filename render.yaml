@@ -3,4 +3,4 @@ services:
     name: lost-and-found-hotel
     env: static
     buildCommand: ""
-    staticPublishPath: ./
+    staticPublishPath: "."
