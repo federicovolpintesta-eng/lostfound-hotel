@@ -27,6 +27,26 @@
     --info: #3b82f6;
 }
 
+[data-theme="light"] {
+    --primary: #0284c7;       /* Sky 600 */
+    --primary-hover: #0369a1;
+    
+    /* Light Glass Backgrounds */
+    --glass-bg: rgba(255, 255, 255, 0.65);
+    --glass-bg-hover: rgba(255, 255, 255, 0.85);
+    --glass-border: rgba(15, 23, 42, 0.08);
+    --glass-border-highlight: rgba(15, 23, 42, 0.15);
+    
+    /* Text */
+    --text-main: #0f172a;     /* Slate 900 */
+    --text-muted: #475569;    /* Slate 600 */
+    --text-heading: #0f172a;
+    
+    /* Shadows */
+    --shadow-glass: 0 8px 32px 0 rgba(15, 23, 42, 0.08);
+    --shadow-neon: 0 0 15px rgba(2, 132, 199, 0.25);
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -41,6 +61,7 @@ body {
     background-color: #020617; /* Slate 950 base */
     min-height: 100vh;
     overflow-x: hidden;
+    transition: color 0.3s ease;
 }
 
 /* CINEMATIC PHOTOGRAPHIC BACKGROUND */
@@ -50,23 +71,28 @@ body {
 }
 .cinematic-overlay {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: -2;
-    background: rgba(2, 6, 23, 0.85); /* Lámina ultra oscura para no distraer */
+    background: rgba(2, 6, 23, 0.85); /* Lámina ultra oscura en modo oscuro */
+    transition: background 0.3s ease;
+}
+[data-theme="light"] .cinematic-overlay {
+    background: rgba(241, 245, 249, 0.85); /* Lámina clara en modo claro */
 }
 .slideshow-image {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     background-size: cover; background-position: center; opacity: 0;
-    animation: kenburns 30s infinite;
+    animation: kenburns 40s infinite;
 }
-/* Imágenes de Unsplash: Spa, Resort, Lujo */
-.slide-1 { background-image: url('https://images.unsplash.com/photo-1540555700478-4be289fbecef?q=80&w=2000&auto=format&fit=crop'); animation-delay: 0s; }
-.slide-2 { background-image: url('https://images.unsplash.com/photo-1582719478250-c89404bb2a0b?q=80&w=2000&auto=format&fit=crop'); animation-delay: 10s; }
-.slide-3 { background-image: url('https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?q=80&w=2000&auto=format&fit=crop'); animation-delay: 20s; }
+/* Imágenes reales del hotel Los Pinos Resort & Spa */
+.slide-1 { background-image: url('assets/hotel_1.jpg'); animation-delay: 0s; }
+.slide-2 { background-image: url('assets/hotel_2.jpg'); animation-delay: 10s; }
+.slide-3 { background-image: url('assets/hotel_3.jpg'); animation-delay: 20s; }
+.slide-4 { background-image: url('assets/hotel_4.jpg'); animation-delay: 30s; }
 
 @keyframes kenburns {
     0% { opacity: 0; transform: scale(1); }
-    10% { opacity: 1; }
-    33% { opacity: 1; transform: scale(1.1); }
-    43% { opacity: 0; transform: scale(1.15); }
+    4% { opacity: 1; }
+    25% { opacity: 1; }
+    29% { opacity: 0; transform: scale(1.08); }
     100% { opacity: 0; transform: scale(1); }
 }
 
@@ -201,6 +227,33 @@ body {
     transition: all 0.3s;
 }
 .btn-cerrar:hover { background: var(--danger); color: white; border-color: var(--danger); box-shadow: 0 0 15px rgba(239,68,68,0.4); }
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.btn-theme-toggle {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text-heading);
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-theme-toggle:hover {
+    background: var(--glass-bg-hover);
+    border-color: var(--glass-border-highlight);
+    transform: scale(1.05);
+}
 
 /* MÉTRICAS */
 .stats-row { 
@@ -591,3 +644,197 @@ tr.priority-high { animation: pulse-danger-dark 2s infinite; background: rgba(23
     box-shadow: var(--shadow-neon);
     filter: brightness(1.2);
 }
+
+/* ==========================================
+   ESTILOS DE GALERÍA Y TARJETAS
+   ========================================== */
+.objects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(285px, 1fr));
+    gap: 24px;
+    padding: 16px 0;
+}
+
+.object-card {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    border: 1px solid var(--glass-border);
+}
+
+.object-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+    border-color: var(--glass-border-highlight);
+}
+
+[data-theme="light"] .object-card:hover {
+    box-shadow: 0 15px 30px rgba(15, 23, 42, 0.08);
+}
+
+.card-img-container {
+    position: relative;
+    height: 180px;
+    background-color: rgba(2, 6, 23, 0.5);
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.card-img:hover {
+    transform: scale(1.04);
+}
+
+.card-room {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    background: rgba(2, 6, 23, 0.8);
+    backdrop-filter: blur(4px);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 13px;
+    border: 1px solid rgba(255,255,255,0.08);
+}
+
+.card-badge-wrapper {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+}
+
+.card-body {
+    padding: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-heading);
+    margin-bottom: 6px;
+}
+
+.card-detail {
+    font-size: 14px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.card-footer {
+    padding: 16px 20px;
+    display: flex;
+    gap: 8px;
+    border-top: 1px solid var(--glass-border);
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.card-footer button {
+    flex: 1;
+}
+
+/* ==========================================
+   ESTILOS DE FILTRO DE PRIORIDAD
+   ========================================== */
+.filter-priority-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    border-radius: 12px;
+}
+
+/* Dragover state visual representation */
+.btn-foto-ui.dragover {
+    border-color: var(--primary) !important;
+    background: rgba(56, 189, 248, 0.08) !important;
+    box-shadow: var(--shadow-neon) !important;
+    transform: scale(1.02);
+}
+
+/* ==========================================
+   ESTILOS DE IMPRESIÓN (ETIQUETADO FÍSICO)
+   ========================================== */
+@media print {
+    /* Ocultar todo el sitio excepto el contenedor del QR */
+    body * {
+        visibility: hidden;
+    }
+    
+    #modalQR, #modalQR * {
+        visibility: visible;
+    }
+    
+    /* Posicionar el modal QR para que ocupe toda la página de impresión */
+    #modalQR {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100vw;
+        height: 100vh;
+        background: white !important;
+        backdrop-filter: none !important;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        margin: 0;
+        z-index: 99999;
+    }
+    
+    .printable-qr-modal {
+        background: white !important;
+        color: #000000 !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .qr-container-box {
+        background: white !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin-bottom: 12px !important;
+    }
+    
+    #imgQR {
+        width: 220px !important;
+        height: 220px !important;
+    }
+    
+    .qr-details {
+        color: #000000 !important;
+    }
+    
+    .qr-details * {
+        color: #000000 !important;
+    }
+    
+    /* Ocultar botones e interfaces no imprimibles */
+    .hide-on-print {
+        display: none !important;
+    }
+}
+

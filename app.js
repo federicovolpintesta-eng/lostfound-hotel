@@ -8,6 +8,48 @@ let registros = [];
 let archivoActual = null;
 let vistaActual = 'pendientes';
 let myChart = null;
+let viewMode = localStorage.getItem('viewMode') || 'table';
+
+// Aplicar tema guardado de inmediato para evitar destellos blancos
+applyTheme(localStorage.getItem('theme') || 'dark');
+
+function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    const themeIcon = document.getElementById('themeToggleIcon');
+    if (themeIcon) {
+        themeIcon.innerText = theme === 'dark' ? '🌙' : '☀️';
+    }
+}
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    applyTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    showToast(`Modo ${newTheme === 'dark' ? 'Oscuro' : 'Claro'} activado`, 'info');
+}
+
+function setViewMode(mode) {
+    viewMode = mode;
+    localStorage.setItem('viewMode', mode);
+    
+    const btnTable = document.getElementById("btnViewTable");
+    const btnGrid = document.getElementById("btnViewGrid");
+    
+    if (mode === 'table') {
+        if (btnTable) btnTable.classList.add('active');
+        if (btnGrid) btnGrid.classList.remove('active');
+    } else {
+        if (btnTable) btnTable.classList.remove('active');
+        if (btnGrid) btnGrid.classList.add('active');
+    }
+    
+    render();
+}
+
+// Iniciar vista guardada
+setViewMode(viewMode);
+
 
 // --- SISTEMA DE NOTIFICACIONES TOAST ---
 function showToast(message, type = 'success') {
@@ -91,6 +133,8 @@ async function login() {
     document.getElementById("loginBox").style.display = "none";
     document.getElementById("app").style.display = "block";
     cargar(true);
+    initRealtime();
+    initDragAndDrop();
 }
 
 async function cargar(limpiar = true) {
@@ -192,12 +236,19 @@ function render() {
     const ahora = new Date();
     const unAñoMs = 365 * 24 * 60 * 60 * 1000;
 
+    const prioFilterVal = document.getElementById("prioFilter")?.value || "Todas";
+
     let filtrados = registros.filter(r => {
         const esAntiguo = (ahora - new Date(r.created_at)) > unAñoMs;
-        if (vistaActual === 'pendientes') return !r.entregado && !esAntiguo;
-        if (vistaActual === 'donaciones') return !r.entregado && esAntiguo;
-        if (vistaActual === 'historial') return r.entregado;
-        return false;
+        let show = false;
+        if (vistaActual === 'pendientes') show = !r.entregado && !esAntiguo;
+        else if (vistaActual === 'donaciones') show = !r.entregado && esAntiguo;
+        else if (vistaActual === 'historial') show = r.entregado;
+        
+        if (show && prioFilterVal !== "Todas") {
+            return (r.prioridad || "Baja") === prioFilterVal;
+        }
+        return show;
     });
 
     // Ordenamiento en memoria
@@ -223,63 +274,128 @@ function render() {
 
     const thead = document.getElementById("cabeceraTabla");
     const tbody = document.getElementById("cuerpoTabla");
+    const table = document.getElementById("tablaPrincipal");
+    const grid = document.getElementById("gridPrincipal");
+    
     tbody.innerHTML = "";
+    grid.innerHTML = "";
 
-    if (vistaActual === 'historial') {
-        thead.innerHTML = `<tr>
-            <th style="cursor:pointer" onclick="sortTable('fecha')">HALLAZGO ${getSortIcon('fecha')}</th>
-            <th style="cursor:pointer" onclick="sortTable('habitacion')">UBICACIÓN ${getSortIcon('habitacion')}</th>
-            <th style="cursor:pointer" onclick="sortTable('objeto')">OBJETO ${getSortIcon('objeto')}</th>
-            <th style="cursor:pointer" onclick="sortTable('nombre_entrega')">RECIBIÓ ${getSortIcon('nombre_entrega')}</th>
-            <th>FOTO</th>
-            <th>FECHA ENTREGA</th>
-        </tr>`;
-    } else {
-        thead.innerHTML = `<tr>
-            <th style="cursor:pointer" onclick="sortTable('fecha')">REGISTRO ${getSortIcon('fecha')}</th>
-            <th style="cursor:pointer" onclick="sortTable('habitacion')">UBICACIÓN ${getSortIcon('habitacion')}</th>
-            <th style="cursor:pointer" onclick="sortTable('objeto')">OBJETO ${getSortIcon('objeto')}</th>
-            <th style="cursor:pointer" onclick="sortTable('sector')">SECTOR ${getSortIcon('sector')}</th>
-            <th style="cursor:pointer" onclick="sortTable('prioridad')">PRIORIDAD ${getSortIcon('prioridad')}</th>
-            <th>FOTO</th>
-            <th style="text-align:center">ACCIÓN</th>
-        </tr>`;
-    }
+    if (viewMode === 'table') {
+        table.style.display = "table";
+        grid.style.display = "none";
 
-    filtrados.forEach(r => {
-        const tr = document.createElement("tr");
-        const fH = new Date(r.created_at).toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric' });
-        const img = r.imagen ? `<img src="${r.imagen}" class="img-thumbnail" loading="lazy" onclick="verGrande('${r.imagen}')">` : "<div style='width:48px;height:48px;background:rgba(0,0,0,0.3);border:1px solid var(--glass-border);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:10px;'>Sin Foto</div>";
-
-        if (r.prioridad === "Alta") tr.classList.add('priority-high');
-
-        if (vistaActual !== 'historial') {
-            tr.innerHTML = `
-                <td style="color:var(--text-muted); font-size:13px; white-space:nowrap;">${fH}</td>
-                <td style="font-weight:600">${r.habitacion || "-"}</td>
-                <td style="font-weight:600; color:var(--primary)">${r.objeto}</td>
-                <td style="font-size:13px; color:var(--text-muted)">${r.sector || "-"}</td>
-                <td><span style="font-size:12px; padding:6px 10px; border-radius:12px; background:${r.prioridad==='Alta'?'rgba(239,68,68,0.2)':r.prioridad==='Media'?'rgba(245,158,11,0.2)':'rgba(255,255,255,0.05)'}; color:${r.prioridad==='Alta'?'#fca5a5':r.prioridad==='Media'?'#fcd34d':'#cbd5e1'}; font-weight:600;">${r.prioridad || "Baja"}</span></td>
-                <td>${img}</td>
-                <td class="action-buttons-wrapper">
-                    <button onclick="entregar(${r.id})" class="btn-action-table">Entregar</button>
-                    <button onclick="eliminar(${r.id})" class="btn-action-table btn-delete-table" title="Eliminar">🗑️</button>
-                </td>`;
+        if (vistaActual === 'historial') {
+            thead.innerHTML = `<tr>
+                <th style="cursor:pointer" onclick="sortTable('fecha')">HALLAZGO ${getSortIcon('fecha')}</th>
+                <th style="cursor:pointer" onclick="sortTable('habitacion')">UBICACIÓN ${getSortIcon('habitacion')}</th>
+                <th style="cursor:pointer" onclick="sortTable('objeto')">OBJETO ${getSortIcon('objeto')}</th>
+                <th style="cursor:pointer" onclick="sortTable('nombre_entrega')">RECIBIÓ ${getSortIcon('nombre_entrega')}</th>
+                <th>FOTO</th>
+                <th>FECHA ENTREGA</th>
+                <th style="text-align:center">ETIQUETA</th>
+            </tr>`;
         } else {
-            const fE = r.fecha_entrega ? new Date(r.fecha_entrega).toLocaleDateString('es-AR') : "-";
-            tr.innerHTML = `
-                <td style="color:var(--text-muted); font-size:13px; white-space:nowrap;">${fH}</td>
-                <td style="font-weight:600">${r.habitacion || "-"}</td>
-                <td style="font-weight:600; color:var(--primary)">${r.objeto}</td>
-                <td style="font-weight:700; color:var(--navy)">${r.nombre_entrega || "S/D"}</td>
-                <td>${img}</td>
-                <td style="display:flex; justify-content:space-between; align-items:center;">
-                    <span style="color:var(--text-muted); font-size:13px;">${fE}</span>
-                    <button onclick="eliminar(${r.id})" class="btn-action-table btn-delete-table" style="padding:6px; margin-left:8px;" title="Eliminar">🗑️</button>
-                </td>`;
+            thead.innerHTML = `<tr>
+                <th style="cursor:pointer" onclick="sortTable('fecha')">REGISTRO ${getSortIcon('fecha')}</th>
+                <th style="cursor:pointer" onclick="sortTable('habitacion')">UBICACIÓN ${getSortIcon('habitacion')}</th>
+                <th style="cursor:pointer" onclick="sortTable('objeto')">OBJETO ${getSortIcon('objeto')}</th>
+                <th style="cursor:pointer" onclick="sortTable('sector')">SECTOR ${getSortIcon('sector')}</th>
+                <th style="cursor:pointer" onclick="sortTable('prioridad')">PRIORIDAD ${getSortIcon('prioridad')}</th>
+                <th>FOTO</th>
+                <th style="text-align:center">ACCIÓN</th>
+            </tr>`;
         }
-        tbody.appendChild(tr);
-    });
+
+        filtrados.forEach(r => {
+            const tr = document.createElement("tr");
+            const fH = new Date(r.created_at).toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric' });
+            const img = r.imagen ? `<img src="${r.imagen}" class="img-thumbnail" loading="lazy" onclick="verGrande('${r.imagen}')">` : "<div style='width:48px;height:48px;background:rgba(0,0,0,0.3);border:1px solid var(--glass-border);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:10px;'>Sin Foto</div>";
+
+            if (r.prioridad === "Alta") tr.classList.add('priority-high');
+
+            if (vistaActual !== 'historial') {
+                tr.innerHTML = `
+                    <td style="color:var(--text-muted); font-size:13px; white-space:nowrap;">${fH}</td>
+                    <td style="font-weight:600">${r.habitacion || "-"}</td>
+                    <td style="font-weight:600; color:var(--primary)">${r.objeto}</td>
+                    <td style="font-size:13px; color:var(--text-muted)">${r.sector || "-"}</td>
+                    <td><span style="font-size:12px; padding:6px 10px; border-radius:12px; background:${r.prioridad==='Alta'?'rgba(239,68,68,0.2)':r.prioridad==='Media'?'rgba(245,158,11,0.2)':'rgba(255,255,255,0.05)'}; color:${r.prioridad==='Alta'?'#fca5a5':r.prioridad==='Media'?'#fcd34d':'#cbd5e1'}; font-weight:600;">${r.prioridad || "Baja"}</span></td>
+                    <td>${img}</td>
+                    <td class="action-buttons-wrapper">
+                        <button onclick="entregar(${r.id})" class="btn-action-table">Entregar</button>
+                        <button onclick="abrirModalQR(${r.id})" class="btn-action-table btn-qr-table" title="Código QR" style="background:rgba(255,255,255,0.05);color:var(--text-main);border:1px solid var(--glass-border);padding:6px 10px;border-radius:6px;cursor:pointer;">🏷️</button>
+                        <button onclick="eliminar(${r.id})" class="btn-action-table btn-delete-table" title="Eliminar">🗑️</button>
+                    </td>`;
+            } else {
+                const fE = r.fecha_entrega ? new Date(r.fecha_entrega).toLocaleDateString('es-AR') : "-";
+                tr.innerHTML = `
+                    <td style="color:var(--text-muted); font-size:13px; white-space:nowrap;">${fH}</td>
+                    <td style="font-weight:600">${r.habitacion || "-"}</td>
+                    <td style="font-weight:600; color:var(--primary)">${r.objeto}</td>
+                    <td style="font-weight:700; color:var(--navy)">${r.nombre_entrega || "S/D"}</td>
+                    <td>${img}</td>
+                    <td>${fE}</td>
+                    <td class="action-buttons-wrapper" style="justify-content:center">
+                        <button onclick="abrirModalQR(${r.id})" class="btn-action-table btn-qr-table" title="Ver QR" style="background:rgba(255,255,255,0.05);color:var(--text-main);border:1px solid var(--glass-border);padding:6px 10px;border-radius:6px;cursor:pointer;">🏷️</button>
+                        <button onclick="eliminar(${r.id})" class="btn-action-table btn-delete-table" title="Eliminar">🗑️</button>
+                    </td>`;
+            }
+            tbody.appendChild(tr);
+        });
+    } else {
+        table.style.display = "none";
+        grid.style.display = "grid";
+
+        filtrados.forEach(r => {
+            const card = document.createElement("div");
+            card.className = "object-card glass-panel";
+            const fH = new Date(r.created_at).toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric' });
+            
+            const badge = `<span style="font-size:12px; padding:6px 10px; border-radius:12px; background:${r.prioridad==='Alta'?'rgba(239,68,68,0.2)':r.prioridad==='Media'?'rgba(245,158,11,0.2)':'rgba(255,255,255,0.05)'}; color:${r.prioridad==='Alta'?'#fca5a5':r.prioridad==='Media'?'#fcd34d':'#cbd5e1'}; font-weight:600;">${r.prioridad || "Baja"}</span>`;
+            const fotoCard = r.imagen 
+                ? `<img src="${r.imagen}" class="card-img" onclick="verGrande('${r.imagen}')">`
+                : `<div style="height:100%; display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:12px;"><span style="font-size:2rem;margin-bottom:8px;display:block">📷</span>Sin Foto</div>`;
+
+            if (r.prioridad === "Alta") card.classList.add('priority-high');
+
+            if (vistaActual !== 'historial') {
+                card.innerHTML = `
+                    <div class="card-img-container">
+                        ${fotoCard}
+                        <span class="card-room">Hab. ${r.habitacion || "-"}</span>
+                        <div class="card-badge-wrapper">${badge}</div>
+                    </div>
+                    <div class="card-body">
+                        <h4 class="card-title" style="color:var(--primary);">${r.objeto}</h4>
+                        <p class="card-detail">📍 <span><strong>Sector:</strong> ${r.sector || "-"}</span></p>
+                        <p class="card-detail">📅 <span><strong>Fecha:</strong> ${fH}</span></p>
+                    </div>
+                    <div class="card-footer">
+                        <button onclick="entregar(${r.id})" class="btn-action-table" style="flex:2">Entregar</button>
+                        <button onclick="abrirModalQR(${r.id})" class="btn-action-table" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);color:var(--text-main);" title="Etiqueta QR">🏷️ QR</button>
+                        <button onclick="eliminar(${r.id})" class="btn-action-table btn-delete-table" style="flex:1" title="Eliminar">🗑️</button>
+                    </div>`;
+            } else {
+                const fE = r.fecha_entrega ? new Date(r.fecha_entrega).toLocaleDateString('es-AR') : "-";
+                card.innerHTML = `
+                    <div class="card-img-container">
+                        ${fotoCard}
+                        <span class="card-room">Hab. ${r.habitacion || "-"}</span>
+                        <div class="card-badge-wrapper">${badge}</div>
+                    </div>
+                    <div class="card-body">
+                        <h4 class="card-title" style="color:var(--primary);">${r.objeto}</h4>
+                        <p class="card-detail">👤 <span><strong>Recibió:</strong> ${r.nombre_entrega || "S/D"}</span></p>
+                        <p class="card-detail">📅 <span><strong>Entrega:</strong> ${fE}</span></p>
+                    </div>
+                    <div class="card-footer">
+                        <button onclick="abrirModalQR(${r.id})" class="btn-action-table" style="flex:3;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);color:var(--text-main);" title="Ver QR">🏷️ Ver QR</button>
+                        <button onclick="eliminar(${r.id})" class="btn-action-table btn-delete-table" style="flex:1" title="Eliminar">🗑️</button>
+                    </div>`;
+            }
+            grid.appendChild(card);
+        });
+    }
 }
 
 function obtenerCategoriaSector(sector) {
@@ -633,4 +749,151 @@ function cargarImagen(url) {
         };
         img.src = url;
     });
+}
+
+// --- FUNCIONALIDADES PREMIUM ADICIONALES ---
+
+// 1. Sincronización en Tiempo Real (Supabase Realtime)
+let realtimeChannel = null;
+
+function initRealtime() {
+    if (realtimeChannel) return; // Evitar duplicaciones
+    
+    realtimeChannel = supabaseClient
+        .channel('schema-db-changes')
+        .on(
+            'postgres_changes',
+            {
+                event: '*',
+                schema: 'public',
+                table: 'olvidos'
+            },
+            (payload) => {
+                console.log('Cambio detectado por Supabase Realtime:', payload);
+                cargar(true);
+            }
+        )
+        .subscribe();
+}
+
+// Helper para procesar y previsualizar imágenes cargadas vía UI
+function manejarArchivoSeleccionado(file) {
+    if (!file) return;
+    
+    if (!file.type.startsWith('image/')) {
+        showToast("El archivo seleccionado no es una imagen.", "warning");
+        return;
+    }
+    
+    archivoActual = file;
+    const preview = document.getElementById("previewFoto");
+    const label = document.getElementById("btnFotoLabel");
+    
+    if (label) {
+        label.innerText = "Cambiar Foto";
+        label.style.color = "var(--success)";
+    }
+    
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+        if (preview) {
+            preview.src = evt.target.result;
+            preview.style.display = 'block';
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+// 2. Arrastrar y Pegar Imágenes (Drag & Drop y Clipboard)
+function initDragAndDrop() {
+    const dropZone = document.querySelector(".btn-foto-ui");
+    if (!dropZone) return;
+
+    // Efectos visuales de drag/drop
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.add('dragover');
+        }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.remove('dragover');
+        }, false);
+    });
+
+    // Procesar soltado
+    dropZone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files && files.length > 0) {
+            manejarArchivoSeleccionado(files[0]);
+            showToast("Imagen cargada con arrastrar y soltar", "success");
+        }
+    }, false);
+
+    // Procesar pegado de imagen global (Ctrl+V / Cmd+V)
+    document.addEventListener('paste', (e) => {
+        const appBox = document.getElementById("app");
+        // Asegurar que el usuario inició sesión
+        if (appBox && appBox.style.display === "none") return;
+        
+        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf("image") !== -1) {
+                const file = items[i].getAsFile();
+                manejarArchivoSeleccionado(file);
+                showToast("Imagen pegada desde el portapapeles", "success");
+                break;
+            }
+        }
+    });
+}
+
+// 3. Modal del Generador de Códigos QR (Etiquetas Físicas)
+async function abrirModalQR(id) {
+    const registro = registros.find(r => r.id === id);
+    if (!registro) return;
+
+    const modal = document.getElementById("modalQR");
+    const imgQR = document.getElementById("imgQR");
+    const details = document.getElementById("qrDetails");
+
+    if (!modal || !imgQR || !details) return;
+
+    const fH = new Date(registro.created_at).toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric' });
+
+    // Contenido del QR: Datos en formato texto legible para escaneo fácil
+    const qrText = `LOST & FOUND - HOTEL LOS PINOS\nID Objeto: #${registro.id}\nObjeto: ${registro.objeto}\nHabitacion: ${registro.habitacion || "S/D"}\nSector: ${registro.sector || "S/D"}\nFecha: ${fH}`;
+    
+    // Invocar API externa QRServer para el renderizado del código
+    const encodedText = encodeURIComponent(qrText);
+    imgQR.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodedText}`;
+
+    // Renderizar detalles informativos para la impresión de la etiqueta
+    details.innerHTML = `
+        <div style="font-size: 16px; font-weight: 800; color: var(--primary); margin-bottom: 8px;">${registro.objeto}</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; font-size: 13px; text-align: left; margin: 12px 0 0 0; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid var(--glass-border);">
+            <div><strong>ID Objeto:</strong> #${registro.id}</div>
+            <div><strong>Habitación:</strong> ${registro.habitacion || "S/D"}</div>
+            <div><strong>Fecha Reg:</strong> ${fH}</div>
+            <div><strong>Sector:</strong> ${registro.sector || "S/D"}</div>
+            <div style="grid-column: span 2;"><strong>Prioridad:</strong> <span style="color:${registro.prioridad === 'Alta' ? '#fca5a5' : registro.prioridad === 'Media' ? '#fcd34d' : '#cbd5e1'}; font-weight:600;">${registro.prioridad || "Baja"}</span></div>
+        </div>
+    `;
+
+    modal.style.display = "flex";
+}
+
+function cerrarModalQR() {
+    const modal = document.getElementById("modalQR");
+    if (modal) modal.style.display = "none";
+}
+
+function imprimirQR() {
+    window.print();
 }
