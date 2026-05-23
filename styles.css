@@ -79,8 +79,19 @@ body {
 }
 .slideshow-image {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background-size: cover; background-position: center; opacity: 0;
+    background-size: contain; background-position: center; background-repeat: no-repeat; opacity: 0;
     animation: slideshowFade 24s infinite ease-in-out;
+    z-index: -3;
+}
+.slideshow-image::before {
+    content: "";
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background-image: inherit;
+    background-size: cover; background-position: center;
+    filter: blur(30px);
+    transform: scale(1.1);
+    z-index: -4;
+    opacity: 0.55;
 }
 /* Imágenes reales del hotel Los Pinos Resort & Spa */
 .slide-1 { background-image: url('assets/hotel_1.jpg'); animation-delay: 0s; }

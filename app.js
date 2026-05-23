@@ -358,11 +358,24 @@ function render() {
 
             if (r.prioridad === "Alta") card.classList.add('priority-high');
 
+            // Formato inteligente de ubicación/habitación para la tarjeta
+            const habValor = (r.habitacion || "").trim();
+            let habitacionTexto = "Sin Datos";
+            if (habValor) {
+                if (/^\d+$/.test(habValor)) {
+                    habitacionTexto = `Hab. ${habValor}`;
+                } else if (habValor.toLowerCase().startsWith("hab")) {
+                    habitacionTexto = habValor;
+                } else {
+                    habitacionTexto = `Encontrado: ${habValor}`;
+                }
+            }
+
             if (vistaActual !== 'historial') {
                 card.innerHTML = `
                     <div class="card-img-container">
                         ${fotoCard}
-                        <span class="card-room">Hab. ${r.habitacion || "-"}</span>
+                        <span class="card-room">${habitacionTexto}</span>
                         <div class="card-badge-wrapper">${badge}</div>
                     </div>
                     <div class="card-body">
@@ -380,7 +393,7 @@ function render() {
                 card.innerHTML = `
                     <div class="card-img-container">
                         ${fotoCard}
-                        <span class="card-room">Hab. ${r.habitacion || "-"}</span>
+                        <span class="card-room">${habitacionTexto}</span>
                         <div class="card-badge-wrapper">${badge}</div>
                     </div>
                     <div class="card-body">
