@@ -146,30 +146,34 @@ async function cargar(limpiar = true) {
         registros = [];
     }
 
-    const { data, error } = await supabaseClient
-        .from("olvidos")
-        .select("*")
-        .range(offset, offset + LIMITE_REGISTROS - 1)
-        .order("created_at", { ascending: false });
+    try {
+        const [resData, resCount] = await Promise.all([
+            supabaseClient
+                .from("olvidos")
+                .select("*")
+                .range(offset, offset + LIMITE_REGISTROS - 1)
+                .order("created_at", { ascending: false }),
+            supabaseClient
+                .from("olvidos")
+                .select('*', { count: 'exact', head: true })
+        ]);
 
-    const { count: totalReal } = await supabaseClient
-        .from("olvidos")
-        .select('*', { count: 'exact', head: true });
-    
-    if (error) {
-        cargando = false;
+        if (resData.error) throw resData.error;
+        if (resCount.error) throw resCount.error;
+
+        registros = limpiar ? resData.data : [...registros, ...resData.data];
+        
+        actualizarDashboard(resCount.count); 
+        actualizarGrafico(); 
+        render();
+
+    } catch (err) {
         showToast("Error al cargar datos", 'error');
-        return console.error(error);
+        console.error(err);
+    } finally {
+        cargando = false;
+        offset += LIMITE_REGISTROS;
     }
-
-    registros = limpiar ? data : [...registros, ...data];
-    
-    actualizarDashboard(totalReal); 
-    actualizarGrafico(); 
-    render();
-    
-    cargando = false;
-    offset += LIMITE_REGISTROS;
 }
 
 async function buscarReal() {
@@ -194,23 +198,31 @@ async function buscarReal() {
 }
 
 async function actualizarDashboard(totalReal) {
-    const { count: enCustodia } = await supabaseClient
-        .from("olvidos")
-        .select('*', { count: 'exact', head: true })
-        .eq('entregado', false);
+    try {
+        const [resCustodia, resEntregados] = await Promise.all([
+            supabaseClient
+                .from("olvidos")
+                .select('*', { count: 'exact', head: true })
+                .eq('entregado', false),
+            supabaseClient
+                .from("olvidos")
+                .select('*', { count: 'exact', head: true })
+                .eq('entregado', true)
+        ]);
 
-    const { count: entregados } = await supabaseClient
-        .from("olvidos")
-        .select('*', { count: 'exact', head: true })
-        .eq('entregado', true);
-    
-    const totalActual = (enCustodia || 0) + (entregados || 0);
-    const porcentaje = totalActual > 0 ? ((entregados / totalActual) * 100).toFixed(1) + "%" : "0%";
+        const enCustodia = resCustodia.count || 0;
+        const entregados = resEntregados.count || 0;
+        
+        const totalActual = enCustodia + entregados;
+        const porcentaje = totalActual > 0 ? ((entregados / totalActual) * 100).toFixed(1) + "%" : "0%";
 
-    document.getElementById("totalObjetos").innerText = totalReal || totalActual;
-    document.getElementById("enCustodiaCount").innerText = enCustodia || 0;
-    document.getElementById("entregadosCount").innerText = entregados || 0;
-    document.getElementById("tasaRetorno").innerText = porcentaje;
+        document.getElementById("totalObjetos").innerText = totalReal || totalActual;
+        document.getElementById("enCustodiaCount").innerText = enCustodia;
+        document.getElementById("entregadosCount").innerText = entregados;
+        document.getElementById("tasaRetorno").innerText = porcentaje;
+    } catch (err) {
+        console.error("Error al actualizar dashboard:", err);
+    }
 }
 
 // Variables globales para ordenamiento
@@ -873,19 +885,25 @@ async function abrirModalQR(id) {
     if (!registro) return;
 
     const modal = document.getElementById("modalQR");
-    const imgQR = document.getElementById("imgQR");
+    const canvasQR = document.getElementById("canvasQR");
     const details = document.getElementById("qrDetails");
 
-    if (!modal || !imgQR || !details) return;
+    if (!modal || !canvasQR || !details) return;
 
     const fH = new Date(registro.created_at).toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric' });
 
     // Contenido del QR: Datos en formato texto legible para escaneo fácil
     const qrText = `LOST & FOUND - HOTEL LOS PINOS\nID Objeto: #${registro.id}\nObjeto: ${registro.objeto}\nHabitacion: ${registro.habitacion || "S/D"}\nSector: ${registro.sector || "S/D"}\nFecha: ${fH}`;
     
-    // Invocar API externa QRServer para el renderizado del código
-    const encodedText = encodeURIComponent(qrText);
-    imgQR.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodedText}`;
+    // Generar el QR localmente e instantáneamente en el canvas usando QRious
+    new QRious({
+        element: canvasQR,
+        value: qrText,
+        size: 250,
+        background: 'white',
+        foreground: 'black',
+        level: 'H'
+    });
 
     // Renderizar detalles informativos para la impresión de la etiqueta
     details.innerHTML = `
