@@ -506,7 +506,38 @@ function exportExcel() {
 
 function verGrande(u) { 
     document.getElementById("imgGrande").src = u; 
+    
+    // Configurar el enlace de descarga
+    const btnDescargar = document.getElementById("btnDescargarFoto");
+    if (btnDescargar) {
+        btnDescargar.href = u;
+        
+        // Determinar extensión adecuada
+        let extension = 'jpg';
+        const match = u.match(/^data:image\/(\w+);base64,/);
+        if (match) {
+            extension = match[1];
+            if (extension === 'jpeg') extension = 'jpg';
+        } else {
+            const parts = u.split('.');
+            if (parts.length > 1) {
+                const ext = parts.pop().split('?')[0].toLowerCase();
+                if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
+                    extension = ext === 'jpeg' ? 'jpg' : ext;
+                }
+            }
+        }
+        btnDescargar.download = `foto_olvido_${Date.now()}.${extension}`;
+    }
+
     document.getElementById("modalFoto").style.display = "flex"; 
+}
+
+function cerrarGrande() {
+    document.getElementById("modalFoto").style.display = "none";
+    setTimeout(() => {
+        document.getElementById("imgGrande").src = "";
+    }, 300);
 }
 
 async function generarActaEntrega(item, persona) {

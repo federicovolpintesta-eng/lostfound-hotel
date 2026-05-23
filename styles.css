@@ -505,3 +505,89 @@ tr.priority-high { animation: pulse-danger-dark 2s infinite; background: rgba(23
         padding-left: 20px; padding-right: 20px; margin-left: 0; margin-right: 0;
     }
 }
+
+/* ==========================================
+   ESTILOS PREMIUM VISTA PREVIA DE FOTOGRAFÍAS
+   ========================================== */
+.photo-preview-modal {
+    width: 650px;
+    max-width: 95%;
+    padding: 30px;
+}
+
+.photo-preview-body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(2, 6, 23, 0.7);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 24px;
+    border: 1px solid var(--glass-border);
+    max-height: 480px;
+    overflow: hidden;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6);
+}
+
+.photo-preview-body img {
+    max-width: 100%;
+    max-height: 440px;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.photo-preview-body img:hover {
+    transform: scale(1.02);
+}
+
+.btn-modal-close-icon {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 28px;
+    cursor: pointer;
+    line-height: 1;
+    transition: all 0.3s;
+}
+
+.btn-modal-close-icon:hover {
+    color: var(--danger);
+    transform: scale(1.1);
+}
+
+.custom-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.custom-modal-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-heading);
+}
+
+/* Modificar el botón de descarga para que actúe como un enlace premium */
+.custom-modal-footer a.btn-modal-confirm {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    line-height: 1;
+    background: var(--primary);
+    color: #020617;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.custom-modal-footer a.btn-modal-confirm:hover {
+    box-shadow: var(--shadow-neon);
+    filter: brightness(1.2);
+}
