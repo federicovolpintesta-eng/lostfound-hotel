@@ -38,11 +38,11 @@
                 <img src="img/tremun.jpeg" alt="Tremun">
             </div>
             <h1>Lost & Found</h1>
-            <div class="login-form-stack">
-                <input type="email" id="loginEmail" placeholder="Usuario">
-                <input type="password" id="loginPassword" placeholder="Contraseña">
-                <button onclick="login()" class="btn-login-action">Ingresar al Sistema</button>
-            </div>
+            <form class="login-form-stack" onsubmit="event.preventDefault(); login();">
+                <input type="email" id="loginEmail" name="email" placeholder="Usuario" autocomplete="username" required>
+                <input type="password" id="loginPassword" name="password" placeholder="Contraseña" autocomplete="current-password" required>
+                <button type="submit" class="btn-login-action">Ingresar al Sistema</button>
+            </form>
         </div>
     </div>
 
