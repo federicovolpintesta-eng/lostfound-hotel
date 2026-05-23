@@ -161,7 +161,7 @@ async function cargar(limpiar = true) {
         if (resData.error) throw resData.error;
         if (resCount.error) throw resCount.error;
 
-        registros = limpiar ? resData.data : [...registros, ...resData.data];
+        registros = limpiar ? (resData.data || []) : [...registros, ...(resData.data || [])];
         
         actualizarDashboard(resCount.count); 
         actualizarGrafico(); 
@@ -192,7 +192,7 @@ async function buscarReal() {
         .limit(100); 
 
     if (!error) {
-        registros = data;
+        registros = data || [];
         render();
     }
 }
@@ -245,186 +245,222 @@ function getSortIcon(col) {
 }
 
 function render() {
-    const ahora = new Date();
-    const unAñoMs = 365 * 24 * 60 * 60 * 1000;
+    try {
+        const ahora = new Date();
+        const unAñoMs = 365 * 24 * 60 * 60 * 1000;
 
-    const prioFilterVal = document.getElementById("prioFilter")?.value || "Todas";
+        const prioFilterVal = document.getElementById("prioFilter")?.value || "Todas";
 
-    let filtrados = registros.filter(r => {
-        const esAntiguo = (ahora - new Date(r.created_at)) > unAñoMs;
-        let show = false;
-        if (vistaActual === 'pendientes') show = !r.entregado && !esAntiguo;
-        else if (vistaActual === 'donaciones') show = !r.entregado && esAntiguo;
-        else if (vistaActual === 'historial') show = r.entregado;
-        
-        if (show && prioFilterVal !== "Todas") {
-            return (r.prioridad || "Baja") === prioFilterVal;
-        }
-        return show;
-    });
-
-    // Ordenamiento en memoria
-    filtrados.sort((a, b) => {
-        let valA, valB;
-        if (currentSortCol === 'fecha') {
-            valA = new Date(a.created_at).getTime();
-            valB = new Date(b.created_at).getTime();
-        } else if (currentSortCol === 'prioridad') {
-            const prioMap = { "Alta": 3, "Media": 2, "Baja": 1 };
-            valA = prioMap[a.prioridad] || 0;
-            valB = prioMap[b.prioridad] || 0;
-        } else {
-            // Ordenamiento por string genérico
-            valA = (a[currentSortCol] || "").toLowerCase();
-            valB = (b[currentSortCol] || "").toLowerCase();
-        }
-
-        if (valA < valB) return isAscending ? -1 : 1;
-        if (valA > valB) return isAscending ? 1 : -1;
-        return 0;
-    });
-
-    const thead = document.getElementById("cabeceraTabla");
-    const tbody = document.getElementById("cuerpoTabla");
-    const table = document.getElementById("tablaPrincipal");
-    const grid = document.getElementById("gridPrincipal");
-    
-    tbody.innerHTML = "";
-    grid.innerHTML = "";
-
-    if (viewMode === 'table') {
-        table.style.display = "table";
-        grid.style.display = "none";
-
-        if (vistaActual === 'historial') {
-            thead.innerHTML = `<tr>
-                <th style="cursor:pointer" onclick="sortTable('fecha')">HALLAZGO ${getSortIcon('fecha')}</th>
-                <th style="cursor:pointer" onclick="sortTable('habitacion')">UBICACIÓN ${getSortIcon('habitacion')}</th>
-                <th style="cursor:pointer" onclick="sortTable('objeto')">OBJETO ${getSortIcon('objeto')}</th>
-                <th style="cursor:pointer" onclick="sortTable('nombre_entrega')">RECIBIÓ ${getSortIcon('nombre_entrega')}</th>
-                <th>FOTO</th>
-                <th>FECHA ENTREGA</th>
-                <th style="text-align:center">ETIQUETA</th>
-            </tr>`;
-        } else {
-            thead.innerHTML = `<tr>
-                <th style="cursor:pointer" onclick="sortTable('fecha')">REGISTRO ${getSortIcon('fecha')}</th>
-                <th style="cursor:pointer" onclick="sortTable('habitacion')">UBICACIÓN ${getSortIcon('habitacion')}</th>
-                <th style="cursor:pointer" onclick="sortTable('objeto')">OBJETO ${getSortIcon('objeto')}</th>
-                <th style="cursor:pointer" onclick="sortTable('sector')">SECTOR ${getSortIcon('sector')}</th>
-                <th style="cursor:pointer" onclick="sortTable('prioridad')">PRIORIDAD ${getSortIcon('prioridad')}</th>
-                <th>FOTO</th>
-                <th style="text-align:center">ACCIÓN</th>
-            </tr>`;
-        }
-
-        filtrados.forEach(r => {
-            const tr = document.createElement("tr");
-            const fH = new Date(r.created_at).toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric' });
-            const img = r.imagen ? `<img src="${r.imagen}" class="img-thumbnail" loading="lazy" onclick="verGrande('${r.imagen}')">` : "<div style='width:48px;height:48px;background:rgba(0,0,0,0.3);border:1px solid var(--glass-border);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:10px;'>Sin Foto</div>";
-
-            if (r.prioridad === "Alta") tr.classList.add('priority-high');
-
-            if (vistaActual !== 'historial') {
-                tr.innerHTML = `
-                    <td style="color:var(--text-muted); font-size:13px; white-space:nowrap;">${fH}</td>
-                    <td style="font-weight:600">${r.habitacion || "-"}</td>
-                    <td style="font-weight:600; color:var(--primary)">${r.objeto}</td>
-                    <td style="font-size:13px; color:var(--text-muted)">${r.sector || "-"}</td>
-                    <td><span style="font-size:12px; padding:6px 10px; border-radius:12px; background:${r.prioridad==='Alta'?'rgba(239,68,68,0.2)':r.prioridad==='Media'?'rgba(245,158,11,0.2)':'rgba(255,255,255,0.05)'}; color:${r.prioridad==='Alta'?'#fca5a5':r.prioridad==='Media'?'#fcd34d':'#cbd5e1'}; font-weight:600;">${r.prioridad || "Baja"}</span></td>
-                    <td>${img}</td>
-                    <td class="action-buttons-wrapper">
-                        <button onclick="entregar(${r.id})" class="btn-action-table">Entregar</button>
-                        <button onclick="abrirModalQR(${r.id})" class="btn-action-table btn-qr-table" title="Código QR" style="background:rgba(255,255,255,0.05);color:var(--text-main);border:1px solid var(--glass-border);padding:6px 10px;border-radius:6px;cursor:pointer;">🏷️</button>
-                        <button onclick="eliminar(${r.id})" class="btn-action-table btn-delete-table" title="Eliminar">🗑️</button>
-                    </td>`;
-            } else {
-                const fE = r.fecha_entrega ? new Date(r.fecha_entrega).toLocaleDateString('es-AR') : "-";
-                tr.innerHTML = `
-                    <td style="color:var(--text-muted); font-size:13px; white-space:nowrap;">${fH}</td>
-                    <td style="font-weight:600">${r.habitacion || "-"}</td>
-                    <td style="font-weight:600; color:var(--primary)">${r.objeto}</td>
-                    <td style="font-weight:700; color:var(--navy)">${r.nombre_entrega || "S/D"}</td>
-                    <td>${img}</td>
-                    <td>${fE}</td>
-                    <td class="action-buttons-wrapper" style="justify-content:center">
-                        <button onclick="abrirModalQR(${r.id})" class="btn-action-table btn-qr-table" title="Ver QR" style="background:rgba(255,255,255,0.05);color:var(--text-main);border:1px solid var(--glass-border);padding:6px 10px;border-radius:6px;cursor:pointer;">🏷️</button>
-                        <button onclick="eliminar(${r.id})" class="btn-action-table btn-delete-table" title="Eliminar">🗑️</button>
-                    </td>`;
-            }
-            tbody.appendChild(tr);
-        });
-    } else {
-        table.style.display = "none";
-        grid.style.display = "grid";
-
-        filtrados.forEach(r => {
-            const card = document.createElement("div");
-            card.className = "object-card glass-panel";
-            const fH = new Date(r.created_at).toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric' });
+        let filtrados = (registros || []).filter(r => {
+            if (!r) return false;
+            const createdTime = r.created_at ? new Date(r.created_at).getTime() : 0;
+            const esAntiguo = isNaN(createdTime) ? false : (ahora.getTime() - createdTime) > unAñoMs;
             
-            const badge = `<span style="font-size:12px; padding:6px 10px; border-radius:12px; background:${r.prioridad==='Alta'?'rgba(239,68,68,0.2)':r.prioridad==='Media'?'rgba(245,158,11,0.2)':'rgba(255,255,255,0.05)'}; color:${r.prioridad==='Alta'?'#fca5a5':r.prioridad==='Media'?'#fcd34d':'#cbd5e1'}; font-weight:600;">${r.prioridad || "Baja"}</span>`;
-            const fotoCard = r.imagen 
-                ? `<img src="${r.imagen}" class="card-img" onclick="verGrande('${r.imagen}')">`
-                : `<div style="height:100%; display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:12px;"><span style="font-size:2rem;margin-bottom:8px;display:block">📷</span>Sin Foto</div>`;
-
-            if (r.prioridad === "Alta") card.classList.add('priority-high');
-
-            // Formato inteligente de ubicación/habitación para la tarjeta
-            const habValor = (r.habitacion || "").trim();
-            let habitacionTexto = "Sin Datos";
-            if (habValor) {
-                if (/^\d+$/.test(habValor)) {
-                    habitacionTexto = `Hab. ${habValor}`;
-                } else if (habValor.toLowerCase().startsWith("hab")) {
-                    habitacionTexto = habValor;
-                } else {
-                    habitacionTexto = `Encontrado: ${habValor}`;
-                }
+            let show = false;
+            if (vistaActual === 'pendientes') show = !r.entregado && !esAntiguo;
+            else if (vistaActual === 'donaciones') show = !r.entregado && esAntiguo;
+            else if (vistaActual === 'historial') show = !!r.entregado;
+            
+            if (show && prioFilterVal !== "Todas") {
+                return (r.prioridad || "Baja") === prioFilterVal;
             }
-
-            if (vistaActual !== 'historial') {
-                card.innerHTML = `
-                    <div class="card-img-container">
-                        ${fotoCard}
-                        <span class="card-room">${habitacionTexto}</span>
-                        <div class="card-badge-wrapper">${badge}</div>
-                    </div>
-                    <div class="card-body">
-                        <h4 class="card-title" style="color:var(--primary);">${r.objeto}</h4>
-                        <p class="card-detail">📍 <span><strong>Sector:</strong> ${r.sector || "-"}</span></p>
-                        <p class="card-detail">📅 <span><strong>Fecha:</strong> ${fH}</span></p>
-                    </div>
-                    <div class="card-footer">
-                        <button onclick="entregar(${r.id})" class="btn-action-table" style="flex:2">Entregar</button>
-                        <button onclick="abrirModalQR(${r.id})" class="btn-action-table" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);color:var(--text-main);" title="Etiqueta QR">🏷️ QR</button>
-                        <button onclick="eliminar(${r.id})" class="btn-action-table btn-delete-table" style="flex:1" title="Eliminar">🗑️</button>
-                    </div>`;
-            } else {
-                const fE = r.fecha_entrega ? new Date(r.fecha_entrega).toLocaleDateString('es-AR') : "-";
-                card.innerHTML = `
-                    <div class="card-img-container">
-                        ${fotoCard}
-                        <span class="card-room">${habitacionTexto}</span>
-                        <div class="card-badge-wrapper">${badge}</div>
-                    </div>
-                    <div class="card-body">
-                        <h4 class="card-title" style="color:var(--primary);">${r.objeto}</h4>
-                        <p class="card-detail">👤 <span><strong>Recibió:</strong> ${r.nombre_entrega || "S/D"}</span></p>
-                        <p class="card-detail">📅 <span><strong>Entrega:</strong> ${fE}</span></p>
-                    </div>
-                    <div class="card-footer">
-                        <button onclick="abrirModalQR(${r.id})" class="btn-action-table" style="flex:3;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);color:var(--text-main);" title="Ver QR">🏷️ Ver QR</button>
-                        <button onclick="eliminar(${r.id})" class="btn-action-table btn-delete-table" style="flex:1" title="Eliminar">🗑️</button>
-                    </div>`;
-            }
-            grid.appendChild(card);
+            return show;
         });
+
+        // Ordenamiento en memoria
+        filtrados.sort((a, b) => {
+            let valA, valB;
+            if (currentSortCol === 'fecha') {
+                valA = a.created_at ? new Date(a.created_at).getTime() : 0;
+                valB = b.created_at ? new Date(b.created_at).getTime() : 0;
+                if (isNaN(valA)) valA = 0;
+                if (isNaN(valB)) valB = 0;
+            } else if (currentSortCol === 'prioridad') {
+                const prioMap = { "Alta": 3, "Media": 2, "Baja": 1 };
+                valA = prioMap[a.prioridad] || 0;
+                valB = prioMap[b.prioridad] || 0;
+            } else {
+                // Ordenamiento por string genérico
+                valA = String(a[currentSortCol] || "").toLowerCase();
+                valB = String(b[currentSortCol] || "").toLowerCase();
+            }
+
+            if (valA < valB) return isAscending ? -1 : 1;
+            if (valA > valB) return isAscending ? 1 : -1;
+            return 0;
+        });
+
+        const thead = document.getElementById("cabeceraTabla");
+        const tbody = document.getElementById("cuerpoTabla");
+        const table = document.getElementById("tablaPrincipal");
+        const grid = document.getElementById("gridPrincipal");
+        
+        if (!thead || !tbody || !table || !grid) return;
+        
+        tbody.innerHTML = "";
+        grid.innerHTML = "";
+
+        if (viewMode === 'table') {
+            table.style.display = "table";
+            grid.style.display = "none";
+
+            if (vistaActual === 'historial') {
+                thead.innerHTML = `<tr>
+                    <th style="cursor:pointer" onclick="sortTable('fecha')">HALLAZGO ${getSortIcon('fecha')}</th>
+                    <th style="cursor:pointer" onclick="sortTable('habitacion')">UBICACIÓN ${getSortIcon('habitacion')}</th>
+                    <th style="cursor:pointer" onclick="sortTable('objeto')">OBJETO ${getSortIcon('objeto')}</th>
+                    <th style="cursor:pointer" onclick="sortTable('nombre_entrega')">RECIBIÓ ${getSortIcon('nombre_entrega')}</th>
+                    <th>FOTO</th>
+                    <th>FECHA ENTREGA</th>
+                    <th style="text-align:center">ETIQUETA</th>
+                </tr>`;
+            } else {
+                thead.innerHTML = `<tr>
+                    <th style="cursor:pointer" onclick="sortTable('fecha')">REGISTRO ${getSortIcon('fecha')}</th>
+                    <th style="cursor:pointer" onclick="sortTable('habitacion')">UBICACIÓN ${getSortIcon('habitacion')}</th>
+                    <th style="cursor:pointer" onclick="sortTable('objeto')">OBJETO ${getSortIcon('objeto')}</th>
+                    <th style="cursor:pointer" onclick="sortTable('sector')">SECTOR ${getSortIcon('sector')}</th>
+                    <th style="cursor:pointer" onclick="sortTable('prioridad')">PRIORIDAD ${getSortIcon('prioridad')}</th>
+                    <th>FOTO</th>
+                    <th style="text-align:center">ACCIÓN</th>
+                </tr>`;
+            }
+
+            filtrados.forEach(r => {
+                const tr = document.createElement("tr");
+                let fH = "-";
+                if (r.created_at) {
+                    const d = new Date(r.created_at);
+                    if (!isNaN(d.getTime())) {
+                        fH = d.toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric' });
+                    }
+                }
+                const img = r.imagen ? `<img src="${r.imagen}" class="img-thumbnail" loading="lazy" onclick="verGrande('${r.imagen}')">` : "<div style='width:48px;height:48px;background:rgba(0,0,0,0.3);border:1px solid var(--glass-border);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:10px;'>Sin Foto</div>";
+
+                if (r.prioridad === "Alta") tr.classList.add('priority-high');
+
+                if (vistaActual !== 'historial') {
+                    tr.innerHTML = `
+                        <td style="color:var(--text-muted); font-size:13px; white-space:nowrap;">${fH}</td>
+                        <td style="font-weight:600">${r.habitacion || "-"}</td>
+                        <td style="font-weight:600; color:var(--primary)">${r.objeto}</td>
+                        <td style="font-size:13px; color:var(--text-muted)">${r.sector || "-"}</td>
+                        <td><span style="font-size:12px; padding:6px 10px; border-radius:12px; background:${r.prioridad==='Alta'?'rgba(239,68,68,0.2)':r.prioridad==='Media'?'rgba(245,158,11,0.2)':'rgba(255,255,255,0.05)'}; color:${r.prioridad==='Alta'?'#fca5a5':r.prioridad==='Media'?'#fcd34d':'#cbd5e1'}; font-weight:600;">${r.prioridad || "Baja"}</span></td>
+                        <td>${img}</td>
+                        <td class="action-buttons-wrapper">
+                            <button onclick="entregar(${r.id})" class="btn-action-table">Entregar</button>
+                            <button onclick="abrirModalQR(${r.id})" class="btn-action-table btn-qr-table" title="Código QR" style="background:rgba(255,255,255,0.05);color:var(--text-main);border:1px solid var(--glass-border);padding:6px 10px;border-radius:6px;cursor:pointer;">🏷️</button>
+                            <button onclick="eliminar(${r.id})" class="btn-action-table btn-delete-table" title="Eliminar">🗑️</button>
+                        </td>`;
+                } else {
+                    let fE = "-";
+                    if (r.fecha_entrega) {
+                        const d = new Date(r.fecha_entrega);
+                        if (!isNaN(d.getTime())) {
+                            fE = d.toLocaleDateString('es-AR');
+                        }
+                    }
+                    tr.innerHTML = `
+                        <td style="color:var(--text-muted); font-size:13px; white-space:nowrap;">${fH}</td>
+                        <td style="font-weight:600">${r.habitacion || "-"}</td>
+                        <td style="font-weight:600; color:var(--primary)">${r.objeto}</td>
+                        <td style="font-weight:700; color:var(--navy)">${r.nombre_entrega || "S/D"}</td>
+                        <td>${img}</td>
+                        <td>${fE}</td>
+                        <td class="action-buttons-wrapper" style="justify-content:center">
+                            <button onclick="abrirModalQR(${r.id})" class="btn-action-table btn-qr-table" title="Ver QR" style="background:rgba(255,255,255,0.05);color:var(--text-main);border:1px solid var(--glass-border);padding:6px 10px;border-radius:6px;cursor:pointer;">🏷️</button>
+                            <button onclick="eliminar(${r.id})" class="btn-action-table btn-delete-table" title="Eliminar">🗑️</button>
+                        </td>`;
+                }
+                tbody.appendChild(tr);
+            });
+        } else {
+            table.style.display = "none";
+            grid.style.display = "grid";
+
+            filtrados.forEach(r => {
+                const card = document.createElement("div");
+                card.className = "object-card glass-panel";
+                let fH = "-";
+                if (r.created_at) {
+                    const d = new Date(r.created_at);
+                    if (!isNaN(d.getTime())) {
+                        fH = d.toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric' });
+                    }
+                }
+                
+                const badge = `<span style="font-size:12px; padding:6px 10px; border-radius:12px; background:${r.prioridad==='Alta'?'rgba(239,68,68,0.2)':r.prioridad==='Media'?'rgba(245,158,11,0.2)':'rgba(255,255,255,0.05)'}; color:${r.prioridad==='Alta'?'#fca5a5':r.prioridad==='Media'?'#fcd34d':'#cbd5e1'}; font-weight:600;">${r.prioridad || "Baja"}</span>`;
+                const fotoCard = r.imagen 
+                    ? `<img src="${r.imagen}" class="card-img" onclick="verGrande('${r.imagen}')">`
+                    : `<div style="height:100%; display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:12px;"><span style="font-size:2rem;margin-bottom:8px;display:block">📷</span>Sin Foto</div>`;
+
+                if (r.prioridad === "Alta") card.classList.add('priority-high');
+
+                // Formato inteligente de ubicación/habitación para la tarjeta
+                const habValor = String(r.habitacion || "").trim();
+                let habitacionTexto = "Sin Datos";
+                if (habValor) {
+                    if (/^\d+$/.test(habValor)) {
+                        habitacionTexto = `Hab. ${habValor}`;
+                    } else if (habValor.toLowerCase().startsWith("hab")) {
+                        habitacionTexto = habValor;
+                    } else {
+                        habitacionTexto = `Encontrado: ${habValor}`;
+                    }
+                }
+
+                if (vistaActual !== 'historial') {
+                    card.innerHTML = `
+                        <div class="card-img-container">
+                            ${fotoCard}
+                            <span class="card-room">${habitacionTexto}</span>
+                            <div class="card-badge-wrapper">${badge}</div>
+                        </div>
+                        <div class="card-body">
+                            <h4 class="card-title" style="color:var(--primary);">${r.objeto}</h4>
+                            <p class="card-detail">📍 <span><strong>Sector:</strong> ${r.sector || "-"}</span></p>
+                            <p class="card-detail">📅 <span><strong>Fecha:</strong> ${fH}</span></p>
+                        </div>
+                        <div class="card-footer">
+                            <button onclick="entregar(${r.id})" class="btn-action-table" style="flex:2">Entregar</button>
+                            <button onclick="abrirModalQR(${r.id})" class="btn-action-table" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);color:var(--text-main);" title="Etiqueta QR">🏷️ QR</button>
+                            <button onclick="eliminar(${r.id})" class="btn-action-table btn-delete-table" style="flex:1" title="Eliminar">🗑️</button>
+                        </div>`;
+                } else {
+                    let fE = "-";
+                    if (r.fecha_entrega) {
+                        const d = new Date(r.fecha_entrega);
+                        if (!isNaN(d.getTime())) {
+                            fE = d.toLocaleDateString('es-AR');
+                        }
+                    }
+                    card.innerHTML = `
+                        <div class="card-img-container">
+                            ${fotoCard}
+                            <span class="card-room">${habitacionTexto}</span>
+                            <div class="card-badge-wrapper">${badge}</div>
+                        </div>
+                        <div class="card-body">
+                            <h4 class="card-title" style="color:var(--primary);">${r.objeto}</h4>
+                            <p class="card-detail">👤 <span><strong>Recibió:</strong> ${r.nombre_entrega || "S/D"}</span></p>
+                            <p class="card-detail">📅 <span><strong>Entrega:</strong> ${fE}</span></p>
+                        </div>
+                        <div class="card-footer">
+                            <button onclick="abrirModalQR(${r.id})" class="btn-action-table" style="flex:3;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);color:var(--text-main);" title="Ver QR">🏷️ Ver QR</button>
+                            <button onclick="eliminar(${r.id})" class="btn-action-table btn-delete-table" style="flex:1" title="Eliminar">🗑️</button>
+                        </div>`;
+                }
+                grid.appendChild(card);
+            });
+        }
+    } catch (e) {
+        console.error("Error crítico durante render():", e);
+        throw e;
     }
 }
 
 function obtenerCategoriaSector(sector) {
-    const s = (sector || "").toLowerCase();
+    const s = String(sector || "").toLowerCase();
     if (s.includes("a&b") || s.includes("bar") || s.includes("comedor")) return "A&B";
     if (s.includes("pileta")) return "Pileta";
     if (s.includes("spa") || s.includes("salud")) return "Spa & Salud";
@@ -443,7 +479,8 @@ async function actualizarGrafico() {
     const caps = { "A&B": 0, "Pileta": 0, "Spa & Salud": 0, "Recreación": 0, "Áreas Públicas": 0, "Habitaciones": 0 };
     const colores = ['#38bdf8', '#fbbf24', '#10b981', '#3b82f6', '#8b5cf6', '#94a3b8']; // Dark Mode Paleta Premium
     
-    data.forEach(r => { 
+    const items = data || [];
+    items.forEach(r => { 
         const cat = obtenerCategoriaSector(r.sector); 
         if(caps.hasOwnProperty(cat)) caps[cat]++; 
     });
