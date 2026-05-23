@@ -10,6 +10,10 @@ let vistaActual = 'pendientes';
 let myChart = null;
 let viewMode = localStorage.getItem('viewMode') || 'table';
 
+// Variables globales para ordenamiento
+let currentSortCol = 'fecha';
+let isAscending = false;
+
 // Aplicar tema guardado de inmediato para evitar destellos blancos
 applyTheme(localStorage.getItem('theme') || 'dark');
 
@@ -224,10 +228,6 @@ async function actualizarDashboard(totalReal) {
         console.error("Error al actualizar dashboard:", err);
     }
 }
-
-// Variables globales para ordenamiento
-let currentSortCol = 'fecha';
-let isAscending = false;
 
 function sortTable(col) {
     if (currentSortCol === col) {
