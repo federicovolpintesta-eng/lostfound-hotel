@@ -12,9 +12,8 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-    <script src="supabase.js?v=2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
-    <script defer src="app.js?v=2"></script>
+    <script type="module" src="js/main.js"></script>
 </head>
 <body>
 
@@ -38,7 +37,7 @@
                 <img src="img/tremun.jpeg" alt="Tremun">
             </div>
             <h1>Lost & Found</h1>
-            <form class="login-form-stack" onsubmit="event.preventDefault(); login();">
+            <form class="login-form-stack">
                 <input type="email" id="loginEmail" name="email" placeholder="Usuario" autocomplete="username" required>
                 <input type="password" id="loginPassword" name="password" placeholder="Contraseña" autocomplete="current-password" required>
                 <button type="submit" class="btn-login-action">Ingresar al Sistema</button>
@@ -53,10 +52,10 @@
                 <img src="img/tremun.jpeg" class="logo-h">
             </div>
             <div class="header-actions">
-                <button onclick="toggleTheme()" class="btn-theme-toggle" id="btnThemeToggle" title="Cambiar Tema">
+                <button class="btn-theme-toggle" id="btnThemeToggle" title="Cambiar Tema">
                     <span id="themeToggleIcon">🌙</span>
                 </button>
-                <button onclick="location.reload()" class="btn-cerrar">Cerrar Sesión</button>
+                <button class="btn-cerrar">Cerrar Sesión</button>
             </div>
         </header>
 
@@ -113,27 +112,27 @@
                 </label>
                 <input type="file" id="file-upload" accept="image/*" style="display:none;">
                 
-                <button onclick="guardar()" class="btn-registrar">Registrar Hallazgo</button>
+                <button class="btn-registrar">Registrar Hallazgo</button>
             </div>
 
             <div class="search-container-pro">
                 <div class="search-wrapper glass-panel">
                     <span class="search-magnifier">🔍</span>
-                    <input type="text" id="searchInput" placeholder="Buscar por objeto, habitación o sector..." oninput="buscarReal()">
+                    <input type="text" id="searchInput" placeholder="Buscar por objeto, habitación o sector...">
                 </div>
             </div>
             
             <div class="table-controls-professional">
                 <div class="tab-pill-container glass-panel">
-                    <button id="tabPendientes" class="pill-link active" onclick="switchTab('pendientes')">Custodia</button>
-                    <button id="tabHistorial" class="pill-link" onclick="switchTab('historial')">Entregados</button>
-                    <button id="tabDonaciones" class="pill-link" onclick="switchTab('donaciones')">Donación</button>
+                    <button id="tabPendientes" class="pill-link active" onclick="window.lostFound.switchTab('pendientes')">Custodia</button>
+                    <button id="tabHistorial" class="pill-link" onclick="window.lostFound.switchTab('historial')">Entregados</button>
+                    <button id="tabDonaciones" class="pill-link" onclick="window.lostFound.switchTab('donaciones')">Donación</button>
                 </div>
                 
                 <!-- Filtro de Prioridad -->
                 <div class="filter-priority-container glass-panel">
                     <span style="font-weight:600;font-size:13px;color:var(--text-muted)">Prioridad:</span>
-                    <select id="prioFilter" onchange="render()" style="background:transparent;border:none;color:var(--text-main);font-weight:600;font-size:13px;outline:none;cursor:pointer;">
+                    <select id="prioFilter" style="background:transparent;border:none;color:var(--text-main);font-weight:600;font-size:13px;outline:none;cursor:pointer;">
                         <option value="Todas">Todas</option>
                         <option value="Alta">Alta</option>
                         <option value="Media">Media</option>
@@ -142,10 +141,10 @@
                 </div>
 
                 <div class="export-pill-container">
-                    <button id="btnViewTable" class="btn-export glass-panel active" onclick="setViewMode('table')" title="Vista Tabla">📋 Tabla</button>
-                    <button id="btnViewGrid" class="btn-export glass-panel" onclick="setViewMode('grid')" title="Vista Galería">🗂️ Galería</button>
-                    <button onclick="exportExcel()" class="btn-export xls glass-panel">📥 Excel</button>
-                    <button onclick="exportPDF()" class="btn-export pdf glass-panel">📄 Reporte PDF</button>
+                    <button id="btnViewTable" class="btn-export glass-panel active" onclick="window.lostFound.setViewMode('table')" title="Vista Tabla">📋 Tabla</button>
+                    <button id="btnViewGrid" class="btn-export glass-panel" onclick="window.lostFound.setViewMode('grid')" title="Vista Galería">🗂️ Galería</button>
+                    <button class="btn-export xls glass-panel">📥 Excel</button>
+                    <button class="btn-export pdf glass-panel">📄 Reporte PDF</button>
                 </div>
             </div>
 
@@ -156,7 +155,7 @@
                 </table>
                 <div id="gridPrincipal" class="objects-grid" style="display:none;"></div>
                 <div id="loadMoreContainer" style="text-align: center; padding: 20px;">
-                    <button onclick="cargar(false)" class="pill-link glass-panel" style="color: var(--text-main); cursor: pointer;">
+                    <button onclick="window.lostFound.cargar(false)" class="pill-link glass-panel" style="color: var(--text-main); cursor: pointer;">
                         Cargar más registros antiguos
                     </button>
                 </div>
@@ -165,11 +164,11 @@
     </div>
 
     <!-- Image Modal -->
-    <div id="modalFoto" class="custom-modal-overlay" onclick="if(event.target === this) cerrarGrande()">
+    <div id="modalFoto" class="custom-modal-overlay">
         <div class="glass-panel-modal photo-preview-modal">
             <div class="custom-modal-header">
                 <span class="custom-modal-title">Vista Previa de la Foto</span>
-                <button onclick="cerrarGrande()" class="btn-modal-close-icon">&times;</button>
+                <button onclick="window.lostFound.cerrarGrande()" class="btn-modal-close-icon">&times;</button>
             </div>
             <div class="custom-modal-body photo-preview-body">
                 <img id="imgGrande" src="" alt="Foto del olvido">
@@ -178,17 +177,17 @@
                 <a id="btnDescargarFoto" href="" download="foto_olvido.jpg" class="btn-modal-confirm">
                     Descargar Foto
                 </a>
-                <button onclick="cerrarGrande()" class="btn-modal-cancel">Cerrar</button>
+                <button onclick="window.lostFound.cerrarGrande()" class="btn-modal-cancel">Cerrar</button>
             </div>
         </div>
     </div>
 
     <!-- MODAL GENERADOR QR -->
-    <div id="modalQR" class="custom-modal-overlay" onclick="if(event.target === this) cerrarModalQR()">
+    <div id="modalQR" class="custom-modal-overlay">
         <div class="glass-panel-modal printable-qr-modal" style="width: 450px; padding: 30px;">
             <div class="custom-modal-header hide-on-print">
                 <span class="custom-modal-title">Código QR del Objeto</span>
-                <button onclick="cerrarModalQR()" class="btn-modal-close-icon">&times;</button>
+                <button onclick="window.lostFound.cerrarModalQR()" class="btn-modal-close-icon">&times;</button>
             </div>
             <div class="qr-modal-body" style="display:flex; flex-direction:column; align-items:center; text-align:center; padding:10px 0;">
                 <div class="qr-container-box" style="background:white; padding:16px; border-radius:12px; margin-bottom:16px; display:inline-flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.15);">
@@ -199,10 +198,10 @@
                 </div>
             </div>
             <div class="custom-modal-footer hide-on-print" style="margin-top:20px; display:flex; justify-content:flex-end; gap:16px;">
-                <button class="btn-modal-confirm" onclick="imprimirQR()">
+                <button class="btn-modal-confirm" onclick="window.lostFound.imprimirQR()">
                     Imprimir Etiqueta
                 </button>
-                <button class="btn-modal-cancel" onclick="cerrarModalQR()">Cerrar</button>
+                <button class="btn-modal-cancel" onclick="window.lostFound.cerrarModalQR()">Cerrar</button>
             </div>
         </div>
     </div>
@@ -217,7 +216,7 @@
             <div class="custom-modal-body" id="inputModalDesc">Descripción</div>
             <input type="text" id="inputModalInput" class="custom-modal-input" autocomplete="off">
             <div class="custom-modal-footer">
-                <button class="btn-modal-cancel" onclick="closeInputModal()">Cancelar</button>
+                <button class="btn-modal-cancel" onclick="window.closeInputModal()">Cancelar</button>
                 <button class="btn-modal-confirm" id="inputModalConfirmBtn">Confirmar</button>
             </div>
         </div>
@@ -230,7 +229,7 @@
             <div class="custom-modal-body" id="confirmModalDesc">Descripción</div>
             <input type="password" id="confirmModalInput" class="custom-modal-input" placeholder="Contraseña de seguridad" autocomplete="new-password">
             <div class="custom-modal-footer">
-                <button class="btn-modal-cancel" onclick="closeConfirmModal()">Cancelar</button>
+                <button class="btn-modal-cancel" onclick="window.closeConfirmModal()">Cancelar</button>
                 <button class="btn-modal-confirm btn-modal-danger" id="confirmModalConfirmBtn">Eliminar</button>
             </div>
         </div>
