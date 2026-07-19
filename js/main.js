@@ -227,11 +227,13 @@ async function abrirModalQR(id) {
   if (!modal || !canvasQR || !details) return;
 
   const fH = new Date(registro.created_at).toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric' });
-  const qrText = `LOST & FOUND - HOTEL LOS PINOS\nID Objeto: #${registro.id}\nObjeto: ${registro.objeto}\nHabitacion: ${registro.habitacion || "S/D"}\nSector: ${registro.sector || "S/D"}\nFecha: ${fH}`;
+  
+  // Create a URL pointing to the new view.html page with the item's ID
+  const qrUrl = `${window.location.origin}/view.html?id=${registro.id}`;
   
   new QRious({
     element: canvasQR,
-    value: qrText,
+    value: qrUrl,
     size: 250,
     background: 'white',
     foreground: 'black',

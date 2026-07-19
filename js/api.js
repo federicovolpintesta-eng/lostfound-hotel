@@ -71,6 +71,10 @@ export async function eliminarOlvido(id) {
   return await supabaseClient.from("olvidos").delete().eq("id", id);
 }
 
+export async function obtenerOlvidoPorId(id) {
+  return await supabaseClient.from("olvidos").select("*").eq("id", id).single();
+}
+
 let realtimeChannel = null;
 export function subscribeRealtime(onChange) {
   if (realtimeChannel) return;
