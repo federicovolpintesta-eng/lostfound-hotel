@@ -1,33 +1,41 @@
 import { obtenerOlvidoPorId } from "./api.js";
 
 async function init() {
+  const loading = document.getElementById("loadingContainer");
+  if (loading) loading.innerHTML = `<div class="view-card glass-panel" style="text-align: center;"><h2 style="color: var(--text-muted);">Consultando base de datos...</h2></div>`;
+
   const urlParams = new URLSearchParams(window.location.search);
   const id = urlParams.get('id');
 
   if (!id) {
-    showError("No se proporcionó un ID válido.");
+    showError("Error: El código QR no contiene un ID válido.");
     return;
   }
 
   try {
     const { data, error } = await obtenerOlvidoPorId(id);
     
-    if (error || !data) {
-      showError("No se encontró el objeto o hubo un error al cargar.");
+    if (error) {
+      console.error(error);
+      showError("Error de BD: " + error.message);
+      return;
+    }
+    
+    if (!data) {
+      showError("No se encontró ningún objeto con este ID.");
       return;
     }
 
     renderData(data);
   } catch (err) {
-    showError("Error de conexión al obtener los datos.");
+    console.error(err);
+    showError("Error inesperado: " + err.message);
   }
 }
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", init);
-} else {
-  init();
-}
+// Module scripts run after the DOM is completely parsed.
+// We can execute init() directly without waiting for events.
+init();
 
 function showError(msg) {
   const loading = document.getElementById("loadingContainer");
