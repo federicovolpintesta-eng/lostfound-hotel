@@ -1,6 +1,6 @@
 import { obtenerOlvidoPorId } from "./api.js";
 
-document.addEventListener("DOMContentLoaded", async () => {
+async function init() {
   const urlParams = new URLSearchParams(window.location.search);
   const id = urlParams.get('id');
 
@@ -21,7 +21,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   } catch (err) {
     showError("Error de conexión al obtener los datos.");
   }
-});
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
 
 function showError(msg) {
   const loading = document.getElementById("loadingContainer");
