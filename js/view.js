@@ -61,41 +61,41 @@ function renderData(registro) {
 
   const prioridadColor = registro.prioridad === 'Alta' ? '#fca5a5' : registro.prioridad === 'Media' ? '#fcd34d' : '#cbd5e1';
 
-  dataCard.innerHTML = \`
-    <h1 class="view-title">\${registro.objeto}</h1>
+  dataCard.innerHTML = `
+    <h1 class="view-title">${registro.objeto}</h1>
     <div style="text-align: center;">
-        <span class="status-badge \${statusClass}">\${statusText}</span>
+        <span class="status-badge ${statusClass}">${statusText}</span>
     </div>
     
-    \${imageHtml}
+    ${imageHtml}
 
     <div class="view-details">
         <div class="detail-item">
             <div class="detail-label">ID Registro</div>
-            <div class="detail-value">#\${registro.id}</div>
+            <div class="detail-value">#${registro.id}</div>
         </div>
         <div class="detail-item">
             <div class="detail-label">Fecha y Hora de Hallazgo</div>
-            <div class="detail-value">\${fH}</div>
+            <div class="detail-value">${fH}</div>
         </div>
         <div class="detail-item">
             <div class="detail-label">Habitación / Ubicación</div>
-            <div class="detail-value">\${registro.habitacion || "No especificada"}</div>
+            <div class="detail-value">${registro.habitacion || "No especificada"}</div>
         </div>
         <div class="detail-item">
             <div class="detail-label">Sector</div>
-            <div class="detail-value">\${registro.sector || "No especificado"}</div>
+            <div class="detail-value">${registro.sector || "No especificado"}</div>
         </div>
         <div class="detail-item">
             <div class="detail-label">Prioridad</div>
-            <div class="detail-value" style="color: \${prioridadColor}">\${registro.prioridad || "Baja"}</div>
+            <div class="detail-value" style="color: ${prioridadColor}">${registro.prioridad || "Baja"}</div>
         </div>
-        \${registro.entregado ? \`
+        ${registro.entregado ? `
         <div class="detail-item">
             <div class="detail-label">Entregado a</div>
-            <div class="detail-value" style="color: var(--success);">\${registro.nombre_entrega || "No registrado"}</div>
+            <div class="detail-value" style="color: var(--success);">${registro.nombre_entrega || "No registrado"}</div>
         </div>
-        \` : ''}
+        ` : ''}
     </div>
-  \`;
+  `;
 }
