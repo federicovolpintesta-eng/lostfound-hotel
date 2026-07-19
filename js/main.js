@@ -312,11 +312,23 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Theme Toggle listener
+  const btnThemeToggle = document.getElementById("btnThemeToggle");
+  if (btnThemeToggle) {
+    btnThemeToggle.addEventListener("click", () => {
+      toggleTheme();
+    });
+  }
+
   // Search input
   const searchInput = document.getElementById("searchInput");
   if (searchInput) {
+    let debounceTimer;
     searchInput.addEventListener("input", () => {
-      buscarReal();
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        buscarReal();
+      }, 400);
     });
   }
 
