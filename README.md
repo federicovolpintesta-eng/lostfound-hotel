@@ -20,7 +20,7 @@ Este sistema reemplaza las planillas manuales tradicionales por un ecosistema di
 ## 🛠️ Stack Tecnológico
 - **Frontend**: HTML5, Vanilla CSS (Glassmorphism), JavaScript (ES Modules).
 - **Backend & Base de Datos**: Supabase DB, Supabase Auth.
-- **Librerías Adicionales**: Chart.js (Analíticas), jsPDF (Generación de Documentos), XLSX (Exportación), QRious (Códigos QR), ImgBB API (Alojamiento de imágenes).
+- **Librerías Adicionales**: Chart.js (Analíticas), jsPDF (Generación de Documentos), XLSX (Exportación), QRious (Códigos QR), Supabase Storage (Alojamiento de imágenes).
 
 ## 🚀 Uso e Instalación
 1. Clonar el repositorio.

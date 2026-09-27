@@ -45,6 +45,23 @@ export async function getSectorStats() {
   return await supabaseClient.from("olvidos").select("sector");
 }
 
+export async function uploadToSupabaseStorage(fileBlob) {
+  const fileName = `foto_${Date.now()}.jpg`;
+  const { data, error } = await supabaseClient.storage
+    .from('fotos_olvidos')
+    .upload(fileName, fileBlob, {
+      contentType: 'image/jpeg'
+    });
+    
+  if (error) throw error;
+  
+  const { data: publicData } = supabaseClient.storage
+    .from('fotos_olvidos')
+    .getPublicUrl(fileName);
+    
+  return publicData.publicUrl;
+}
+
 export async function crearOlvido(habitacion, objeto, sector, prioridad, imagenUrl) {
   return await supabaseClient.from("olvidos").insert({
     habitacion,

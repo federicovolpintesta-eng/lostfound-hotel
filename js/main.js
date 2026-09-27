@@ -5,7 +5,8 @@ import {
   crearOlvido, 
   entregarOlvido, 
   eliminarOlvido, 
-  subscribeRealtime 
+  subscribeRealtime,
+  uploadToSupabaseStorage
 } from "./api.js";
 import { 
   uiState, 
@@ -132,19 +133,14 @@ async function guardar() {
 
   try {
     if (archivoActual) {
-      const formData = new FormData();
-      formData.append("image", archivoActual);
-      
-      const response = await fetch("https://api.imgbb.com/1/upload?key=3d55473935401cd7cb71b0ac18749f3c", {
-        method: "POST",
-        body: formData
-      });
-      const result = await response.json();
-      
-      if (result.success) {
-        urlPublica = result.data.url;
-      } else {
-        throw new Error("Error al subir la foto: " + (result.error ? result.error.message : "Desconocido"));
+      // Comprimir la imagen en el cliente antes de subirla para evitar errores por archivos pesados
+      const fotoComprimida = await compressImage(archivoActual, 1024, 1024, 0.7);
+
+      try {
+        urlPublica = await uploadToSupabaseStorage(fotoComprimida);
+      } catch (errSupa) {
+        console.error("Error al subir a Supabase:", errSupa);
+        throw new Error("El servidor de imágenes falló. Por favor intenta más tarde.");
       }
     }
 
@@ -382,3 +378,60 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
+async function compressImage(file, maxWidth = 1024, maxHeight = 1024, quality = 0.7) {
+  return new Promise((resolve) => {
+    if (!window.FileReader || !window.HTMLCanvasElement) {
+      resolve(file);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(file);
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const compressedFile = new File([blob], file.name, {
+              type: 'image/jpeg',
+              lastModified: Date.now()
+            });
+            resolve(compressedFile);
+          } else {
+            resolve(file);
+          }
+        }, 'image/jpeg', quality);
+      };
+      img.onerror = () => resolve(file);
+    };
+    reader.onerror = () => resolve(file);
+  });
+}
