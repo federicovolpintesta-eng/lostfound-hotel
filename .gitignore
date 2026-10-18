@@ -1,0 +1,27 @@
+# Environment and credentials
+.env
+.env.*
+!.env.example
+
+# Local databases and reports
+*.db
+*.sqlite
+*.sqlite3
+security_findings.db
+security_audit.db
+
+# Backup and dump files
+backup_*.json
+backup_records.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+
+# OS specific
+.DS_Store
+Thumbs.db

@@ -1,4 +1,6 @@
-import { login } from "./auth.js";
+import { login, logout } from "./auth.js";
+import { escapeHTML } from "./security.js";
+import { supabaseClient } from "./supabaseClient.js";
 import { 
   fetchOlvidos, 
   buscarOlvidos, 
@@ -193,11 +195,11 @@ async function entregar(id) {
 }
 
 async function eliminar(id) {
-  const password = await openConfirmModal("Seguridad Requerida", "Ingrese la contraseña de seguridad para eliminar este registro:");
-  if (password === null) return;
+  const confirmText = await openConfirmModal("Confirmación de Seguridad", "Esta acción es irreversible. Para eliminar este registro, escriba ELIMINAR:");
+  if (confirmText === null) return;
   
-  if (password !== "lospinos") {
-    showToast("Contraseña incorrecta", 'error');
+  if (confirmText.trim().toUpperCase() !== "ELIMINAR") {
+    showToast("Confirmación no válida. Acción cancelada.", 'warning');
     return;
   }
 
@@ -236,14 +238,20 @@ async function abrirModalQR(id) {
     level: 'H'
   });
 
+  const safeObjeto = escapeHTML(registro.objeto);
+  const safeHab = escapeHTML(registro.habitacion || "S/D");
+  const safeSector = escapeHTML(registro.sector || "S/D");
+  const safePrioridad = escapeHTML(registro.prioridad || "Baja");
+  const safeId = parseInt(registro.id, 10);
+
   details.innerHTML = `
-    <div style="font-size: 16px; font-weight: 800; color: var(--primary); margin-bottom: 8px;">${registro.objeto}</div>
+    <div style="font-size: 16px; font-weight: 800; color: var(--primary); margin-bottom: 8px;">${safeObjeto}</div>
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; font-size: 13px; text-align: left; margin: 12px 0 0 0; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid var(--glass-border);">
-      <div><strong>ID Objeto:</strong> #${registro.id}</div>
-      <div><strong>Habitación:</strong> ${registro.habitacion || "S/D"}</div>
+      <div><strong>ID Objeto:</strong> #${safeId}</div>
+      <div><strong>Habitación:</strong> ${safeHab}</div>
       <div><strong>Fecha Reg:</strong> ${fH}</div>
-      <div><strong>Sector:</strong> ${registro.sector || "S/D"}</div>
-      <div style="grid-column: span 2;"><strong>Prioridad:</strong> <span style="color:${registro.prioridad === 'Alta' ? '#fca5a5' : registro.prioridad === 'Media' ? '#fcd34d' : '#cbd5e1'}; font-weight:600;">${registro.prioridad || "Baja"}</span></div>
+      <div><strong>Sector:</strong> ${safeSector}</div>
+      <div style="grid-column: span 2;"><strong>Prioridad:</strong> <span style="color:${registro.prioridad === 'Alta' ? '#fca5a5' : registro.prioridad === 'Media' ? '#fcd34d' : '#cbd5e1'}; font-weight:600;">${safePrioridad}</span></div>
     </div>
   `;
 
@@ -294,10 +302,33 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Logout/Refresh
+  // Verify active session on load
+  supabaseClient.auth.getSession().then(({ data: { session } }) => {
+    if (session) {
+      document.getElementById("loginBox").style.display = "none";
+      document.getElementById("app").style.display = "block";
+      cargar(true);
+      subscribeRealtime(() => cargar(true));
+      initDragAndDrop();
+    } else {
+      document.getElementById("loginBox").style.display = "flex";
+      document.getElementById("app").style.display = "none";
+    }
+  }).catch((err) => {
+    console.error("Auth verification failed:", err);
+  });
+
+  // Logout with Supabase token invalidation
   const btnCerrar = document.querySelector(".btn-cerrar");
   if (btnCerrar) {
-    btnCerrar.addEventListener("click", () => {
+    btnCerrar.addEventListener("click", async () => {
+      btnCerrar.innerText = "Cerrando...";
+      btnCerrar.disabled = true;
+      try {
+        await logout();
+      } catch (err) {
+        console.error("Logout error:", err);
+      }
       location.reload();
     });
   }
@@ -383,6 +414,13 @@ async function compressImage(file, maxWidth = 1024, maxHeight = 1024, quality = 
   return new Promise((resolve) => {
     if (!window.FileReader || !window.HTMLCanvasElement) {
       resolve(file);
+      return;
+    }
+
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB limit
+    if (file && file.size > MAX_FILE_SIZE) {
+      console.warn("File rejected: exceeds maximum size limit of 10MB");
+      resolve(null);
       return;
     }
 

@@ -1,4 +1,5 @@
 import { obtenerOlvidoPorId } from "./api.js";
+import { escapeHTML, sanitizeUrl } from "./security.js";
 
 async function init() {
   const loading = document.getElementById("loadingContainer");
@@ -39,7 +40,9 @@ init();
 
 function showError(msg) {
   const loading = document.getElementById("loadingContainer");
-  loading.innerHTML = `<div class="view-card glass-panel" style="text-align: center;"><h2 style="color: var(--danger);">${msg}</h2></div>`;
+  if (loading) {
+    loading.innerHTML = `<div class="view-card glass-panel" style="text-align: center;"><h2 style="color: var(--danger);">${escapeHTML(msg)}</h2></div>`;
+  }
 }
 
 function renderData(registro) {
@@ -49,9 +52,17 @@ function renderData(registro) {
   const dataCard = document.getElementById("dataCard");
   const fH = new Date(registro.created_at).toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
   
+  const safeImg = sanitizeUrl(registro.imagen);
+  const safeObjeto = escapeHTML(registro.objeto);
+  const safeHabitacion = escapeHTML(registro.habitacion || "No especificada");
+  const safeSector = escapeHTML(registro.sector || "No especificado");
+  const safePrioridad = escapeHTML(registro.prioridad || "Baja");
+  const safeNombreEntrega = escapeHTML(registro.nombre_entrega || "No registrado");
+  const safeId = parseInt(registro.id, 10);
+
   let imageHtml = "";
-  if (registro.imagen) {
-    imageHtml = `<img src="${registro.imagen}" alt="${registro.objeto}" class="view-image">`;
+  if (safeImg) {
+    imageHtml = `<img src="${safeImg}" alt="${safeObjeto}" class="view-image">`;
   } else {
     imageHtml = `<div style="text-align:center; padding: 40px; background: rgba(255,255,255,0.05); border-radius: 12px; border: 1px dashed var(--glass-border); color: var(--text-muted);">Sin fotografía adjunta</div>`;
   }
@@ -62,7 +73,7 @@ function renderData(registro) {
   const prioridadColor = registro.prioridad === 'Alta' ? '#fca5a5' : registro.prioridad === 'Media' ? '#fcd34d' : '#cbd5e1';
 
   dataCard.innerHTML = `
-    <h1 class="view-title">${registro.objeto}</h1>
+    <h1 class="view-title">${safeObjeto}</h1>
     <div style="text-align: center;">
         <span class="status-badge ${statusClass}">${statusText}</span>
     </div>
@@ -72,7 +83,7 @@ function renderData(registro) {
     <div class="view-details">
         <div class="detail-item">
             <div class="detail-label">ID Registro</div>
-            <div class="detail-value">#${registro.id}</div>
+            <div class="detail-value">#${safeId}</div>
         </div>
         <div class="detail-item">
             <div class="detail-label">Fecha y Hora de Hallazgo</div>
@@ -80,20 +91,20 @@ function renderData(registro) {
         </div>
         <div class="detail-item">
             <div class="detail-label">Habitación / Ubicación</div>
-            <div class="detail-value">${registro.habitacion || "No especificada"}</div>
+            <div class="detail-value">${safeHabitacion}</div>
         </div>
         <div class="detail-item">
             <div class="detail-label">Sector</div>
-            <div class="detail-value">${registro.sector || "No especificado"}</div>
+            <div class="detail-value">${safeSector}</div>
         </div>
         <div class="detail-item">
             <div class="detail-label">Prioridad</div>
-            <div class="detail-value" style="color: ${prioridadColor}">${registro.prioridad || "Baja"}</div>
+            <div class="detail-value" style="color: ${prioridadColor}">${safePrioridad}</div>
         </div>
         ${registro.entregado ? `
         <div class="detail-item">
             <div class="detail-label">Entregado a</div>
-            <div class="detail-value" style="color: var(--success);">${registro.nombre_entrega || "No registrado"}</div>
+            <div class="detail-value" style="color: var(--success);">${safeNombreEntrega}</div>
         </div>
         ` : ''}
     </div>

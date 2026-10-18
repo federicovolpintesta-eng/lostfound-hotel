@@ -1,4 +1,5 @@
 import { supabaseClient } from "./supabaseClient.js";
+import { sanitizePostgrestQuery } from "./security.js";
 
 export async function fetchOlvidos(offset, limit) {
   const resData = await supabaseClient
@@ -15,10 +16,14 @@ export async function fetchOlvidos(offset, limit) {
 }
 
 export async function buscarOlvidos(texto) {
+  const safeText = sanitizePostgrestQuery(texto);
+  if (!safeText) {
+    return { data: [], error: null };
+  }
   return await supabaseClient
     .from("olvidos")
     .select("*")
-    .or(`objeto.ilike.*${texto}*,habitacion.ilike.*${texto}*,sector.ilike.*${texto}*`)
+    .or(`objeto.ilike.*${safeText}*,habitacion.ilike.*${safeText}*,sector.ilike.*${safeText}*`)
     .order("created_at", { ascending: false })
     .limit(1000);
 }
@@ -74,22 +79,29 @@ export async function crearOlvido(habitacion, objeto, sector, prioridad, imagenU
 }
 
 export async function entregarOlvido(id, nombrePersona) {
+  const safeId = parseInt(id, 10);
+  if (isNaN(safeId)) return { error: new Error("ID inválido") };
+  const cleanNombre = String(nombrePersona || '').trim().substring(0, 150);
   return await supabaseClient.from("olvidos")
     .update({
       entregado: true,
-      nombre_entrega: nombrePersona,
+      nombre_entrega: cleanNombre,
       fecha_entrega: new Date().toISOString(),
       imagen: null
     })
-    .eq("id", id);
+    .eq("id", safeId);
 }
 
 export async function eliminarOlvido(id) {
-  return await supabaseClient.from("olvidos").delete().eq("id", id);
+  const safeId = parseInt(id, 10);
+  if (isNaN(safeId)) return { error: new Error("ID inválido") };
+  return await supabaseClient.from("olvidos").delete().eq("id", safeId);
 }
 
 export async function obtenerOlvidoPorId(id) {
-  return await supabaseClient.from("olvidos").select("*").eq("id", id).single();
+  const safeId = parseInt(id, 10);
+  if (isNaN(safeId)) return { data: null, error: new Error("ID inválido") };
+  return await supabaseClient.from("olvidos").select("*").eq("id", safeId).single();
 }
 
 let realtimeChannel = null;

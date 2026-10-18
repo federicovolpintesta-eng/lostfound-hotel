@@ -32,6 +32,12 @@ export function manejarArchivoSeleccionado(file) {
     showToast("El archivo seleccionado no es una imagen.", "warning");
     return;
   }
+
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB limit
+  if (file.size > MAX_FILE_SIZE) {
+    showToast("La imagen supera el límite permitido de 10MB.", "warning");
+    return;
+  }
   
   archivoActual = file;
   const preview = document.getElementById("previewFoto");

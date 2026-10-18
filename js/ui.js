@@ -1,4 +1,5 @@
 import { getDashboardStats, getSectorStats } from "./api.js";
+import { escapeHTML, sanitizeUrl } from "./security.js";
 
 // Global UI State
 export const uiState = {
@@ -40,7 +41,13 @@ export function showToast(message, type = 'success') {
   if (type === 'warning') icon = '⚠️';
   if (type === 'info') icon = 'ℹ️';
 
-  toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+  const iconSpan = document.createElement('span');
+  iconSpan.textContent = icon;
+  const textSpan = document.createElement('span');
+  textSpan.textContent = String(message || '');
+  toast.appendChild(iconSpan);
+  toast.appendChild(document.createTextNode(' '));
+  toast.appendChild(textSpan);
   container.appendChild(toast);
 
   setTimeout(() => {
@@ -344,8 +351,17 @@ export function render() {
             fH = d.toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric' });
           }
         }
-        const img = r.imagen 
-          ? `<img src="${r.imagen}" class="img-thumbnail" loading="lazy" onclick="window.lostFound.verGrande('${r.imagen}')">` 
+
+        const safeId = parseInt(r.id, 10);
+        const safeImg = sanitizeUrl(r.imagen);
+        const safeObjeto = escapeHTML(r.objeto);
+        const safeHab = escapeHTML(r.habitacion || "-");
+        const safeSector = escapeHTML(r.sector || "-");
+        const safePrio = escapeHTML(r.prioridad || "Baja");
+        const safeNombreEntrega = escapeHTML(r.nombre_entrega || "S/D");
+
+        const img = safeImg 
+          ? `<img src="${safeImg}" class="img-thumbnail" loading="lazy" onclick="window.lostFound.verGrande('${escapeHTML(safeImg)}')">` 
           : "<div style='width:48px;height:48px;background:rgba(0,0,0,0.3);border:1px solid var(--glass-border);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:10px;'>Sin Foto</div>";
 
         if (r.prioridad === "Alta") tr.classList.add('priority-high');
@@ -353,15 +369,15 @@ export function render() {
         if (uiState.vistaActual !== 'historial') {
           tr.innerHTML = `
             <td style="color:var(--text-muted); font-size:13px; white-space:nowrap;">${fH}</td>
-            <td style="font-weight:600">${r.habitacion || "-"}</td>
-            <td style="font-weight:600; color:var(--primary)">${r.objeto}</td>
-            <td style="font-size:13px; color:var(--text-muted)">${r.sector || "-"}</td>
-            <td><span style="font-size:12px; padding:6px 10px; border-radius:12px; background:${r.prioridad==='Alta'?'rgba(239,68,68,0.2)':r.prioridad==='Media'?'rgba(245,158,11,0.2)':'rgba(255,255,255,0.05)'}; color:${r.prioridad==='Alta'?'#fca5a5':r.prioridad==='Media'?'#fcd34d':'#cbd5e1'}; font-weight:600;">${r.prioridad || "Baja"}</span></td>
+            <td style="font-weight:600">${safeHab}</td>
+            <td style="font-weight:600; color:var(--primary)">${safeObjeto}</td>
+            <td style="font-size:13px; color:var(--text-muted)">${safeSector}</td>
+            <td><span style="font-size:12px; padding:6px 10px; border-radius:12px; background:${r.prioridad==='Alta'?'rgba(239,68,68,0.2)':r.prioridad==='Media'?'rgba(245,158,11,0.2)':'rgba(255,255,255,0.05)'}; color:${r.prioridad==='Alta'?'#fca5a5':r.prioridad==='Media'?'#fcd34d':'#cbd5e1'}; font-weight:600;">${safePrio}</span></td>
             <td>${img}</td>
             <td class="action-buttons-wrapper">
-              <button onclick="window.lostFound.entregar(${r.id})" class="btn-action-table">Entregar</button>
-              <button onclick="window.lostFound.abrirModalQR(${r.id})" class="btn-action-table btn-qr-table" title="Código QR" style="background:rgba(255,255,255,0.05);color:var(--text-main);border:1px solid var(--glass-border);padding:6px 10px;border-radius:6px;cursor:pointer;">🏷️</button>
-              <button onclick="window.lostFound.eliminar(${r.id})" class="btn-action-table btn-delete-table" title="Eliminar">🗑️</button>
+              <button onclick="window.lostFound.entregar(${safeId})" class="btn-action-table">Entregar</button>
+              <button onclick="window.lostFound.abrirModalQR(${safeId})" class="btn-action-table btn-qr-table" title="Código QR" style="background:rgba(255,255,255,0.05);color:var(--text-main);border:1px solid var(--glass-border);padding:6px 10px;border-radius:6px;cursor:pointer;">🏷️</button>
+              <button onclick="window.lostFound.eliminar(${safeId})" class="btn-action-table btn-delete-table" title="Eliminar">🗑️</button>
             </td>`;
         } else {
           let fE = "-";
@@ -373,14 +389,14 @@ export function render() {
           }
           tr.innerHTML = `
             <td style="color:var(--text-muted); font-size:13px; white-space:nowrap;">${fH}</td>
-            <td style="font-weight:600">${r.habitacion || "-"}</td>
-            <td style="font-weight:600; color:var(--primary)">${r.objeto}</td>
-            <td style="font-weight:700; color:var(--navy)">${r.nombre_entrega || "S/D"}</td>
+            <td style="font-weight:600">${safeHab}</td>
+            <td style="font-weight:600; color:var(--primary)">${safeObjeto}</td>
+            <td style="font-weight:700; color:var(--navy)">${safeNombreEntrega}</td>
             <td>${img}</td>
             <td>${fE}</td>
             <td class="action-buttons-wrapper" style="justify-content:center">
-              <button onclick="window.lostFound.abrirModalQR(${r.id})" class="btn-action-table btn-qr-table" title="Ver QR" style="background:rgba(255,255,255,0.05);color:var(--text-main);border:1px solid var(--glass-border);padding:6px 10px;border-radius:6px;cursor:pointer;">🏷️</button>
-              <button onclick="window.lostFound.eliminar(${r.id})" class="btn-action-table btn-delete-table" title="Eliminar">🗑️</button>
+              <button onclick="window.lostFound.abrirModalQR(${safeId})" class="btn-action-table btn-qr-table" title="Ver QR" style="background:rgba(255,255,255,0.05);color:var(--text-main);border:1px solid var(--glass-border);padding:6px 10px;border-radius:6px;cursor:pointer;">🏷️</button>
+              <button onclick="window.lostFound.eliminar(${safeId})" class="btn-action-table btn-delete-table" title="Eliminar">🗑️</button>
             </td>`;
         }
         tbody.appendChild(tr);
@@ -400,9 +416,16 @@ export function render() {
           }
         }
         
-        const badge = `<span style="font-size:12px; padding:6px 10px; border-radius:12px; background:${r.prioridad==='Alta'?'rgba(239,68,68,0.2)':r.prioridad==='Media'?'rgba(245,158,11,0.2)':'rgba(255,255,255,0.05)'}; color:${r.prioridad==='Alta'?'#fca5a5':r.prioridad==='Media'?'#fcd34d':'#cbd5e1'}; font-weight:600;">${r.prioridad || "Baja"}</span>`;
-        const fotoCard = r.imagen 
-          ? `<img src="${r.imagen}" class="card-img" onclick="window.lostFound.verGrande('${r.imagen}')">`
+        const safeId = parseInt(r.id, 10);
+        const safeImg = sanitizeUrl(r.imagen);
+        const safeObjeto = escapeHTML(r.objeto);
+        const safeSector = escapeHTML(r.sector || "-");
+        const safePrio = escapeHTML(r.prioridad || "Baja");
+        const safeNombreEntrega = escapeHTML(r.nombre_entrega || "S/D");
+
+        const badge = `<span style="font-size:12px; padding:6px 10px; border-radius:12px; background:${r.prioridad==='Alta'?'rgba(239,68,68,0.2)':r.prioridad==='Media'?'rgba(245,158,11,0.2)':'rgba(255,255,255,0.05)'}; color:${r.prioridad==='Alta'?'#fca5a5':r.prioridad==='Media'?'#fcd34d':'#cbd5e1'}; font-weight:600;">${safePrio}</span>`;
+        const fotoCard = safeImg 
+          ? `<img src="${safeImg}" class="card-img" onclick="window.lostFound.verGrande('${escapeHTML(safeImg)}')">`
           : `<div style="height:100%; display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:12px;"><span style="font-size:2rem;margin-bottom:8px;display:block">📷</span>Sin Foto</div>`;
 
         if (r.prioridad === "Alta") card.classList.add('priority-high');
@@ -418,23 +441,24 @@ export function render() {
             habitacionTexto = `Encontrado: ${habValor}`;
           }
         }
+        const safeHabitacionTexto = escapeHTML(habitacionTexto);
 
         if (uiState.vistaActual !== 'historial') {
           card.innerHTML = `
             <div class="card-img-container">
               ${fotoCard}
-              <span class="card-room">${habitacionTexto}</span>
+              <span class="card-room">${safeHabitacionTexto}</span>
               <div class="card-badge-wrapper">${badge}</div>
             </div>
             <div class="card-body">
-              <h4 class="card-title" style="color:var(--primary);">${r.objeto}</h4>
-              <p class="card-detail">📍 <span><strong>Sector:</strong> ${r.sector || "-"}</span></p>
+              <h4 class="card-title" style="color:var(--primary);">${safeObjeto}</h4>
+              <p class="card-detail">📍 <span><strong>Sector:</strong> ${safeSector}</span></p>
               <p class="card-detail">📅 <span><strong>Fecha:</strong> ${fH}</span></p>
             </div>
             <div class="card-footer">
-              <button onclick="window.lostFound.entregar(${r.id})" class="btn-action-table" style="flex:2">Entregar</button>
-              <button onclick="window.lostFound.abrirModalQR(${r.id})" class="btn-action-table" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);color:var(--text-main);" title="Etiqueta QR">🏷️ QR</button>
-              <button onclick="window.lostFound.eliminar(${r.id})" class="btn-action-table btn-delete-table" style="flex:1" title="Eliminar">🗑️</button>
+              <button onclick="window.lostFound.entregar(${safeId})" class="btn-action-table" style="flex:2">Entregar</button>
+              <button onclick="window.lostFound.abrirModalQR(${safeId})" class="btn-action-table" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);color:var(--text-main);" title="Etiqueta QR">🏷️ QR</button>
+              <button onclick="window.lostFound.eliminar(${safeId})" class="btn-action-table btn-delete-table" style="flex:1" title="Eliminar">🗑️</button>
             </div>`;
         } else {
           let fE = "-";
@@ -447,17 +471,17 @@ export function render() {
           card.innerHTML = `
             <div class="card-img-container">
               ${fotoCard}
-              <span class="card-room">${habitacionTexto}</span>
+              <span class="card-room">${safeHabitacionTexto}</span>
               <div class="card-badge-wrapper">${badge}</div>
             </div>
             <div class="card-body">
-              <h4 class="card-title" style="color:var(--primary);">${r.objeto}</h4>
-              <p class="card-detail">👤 <span><strong>Recibió:</strong> ${r.nombre_entrega || "S/D"}</span></p>
+              <h4 class="card-title" style="color:var(--primary);">${safeObjeto}</h4>
+              <p class="card-detail">👤 <span><strong>Recibió:</strong> ${safeNombreEntrega}</span></p>
               <p class="card-detail">📅 <span><strong>Entrega:</strong> ${fE}</span></p>
             </div>
             <div class="card-footer">
-              <button onclick="window.lostFound.abrirModalQR(${r.id})" class="btn-action-table" style="flex:3;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);color:var(--text-main);" title="Ver QR">🏷️ Ver QR</button>
-              <button onclick="window.lostFound.eliminar(${r.id})" class="btn-action-table btn-delete-table" style="flex:1" title="Eliminar">🗑️</button>
+              <button onclick="window.lostFound.abrirModalQR(${safeId})" class="btn-action-table" style="flex:3;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);color:var(--text-main);" title="Ver QR">🏷️ Ver QR</button>
+              <button onclick="window.lostFound.eliminar(${safeId})" class="btn-action-table btn-delete-table" style="flex:1" title="Eliminar">🗑️</button>
             </div>`;
         }
         grid.appendChild(card);
