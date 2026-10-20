@@ -101,7 +101,41 @@ export async function eliminarOlvido(id) {
 export async function obtenerOlvidoPorId(id) {
   const safeId = parseInt(id, 10);
   if (isNaN(safeId)) return { data: null, error: new Error("ID inválido") };
-  return await supabaseClient.from("olvidos").select("*").eq("id", safeId).single();
+
+  // 1. Invocar función RPC segura get_public_olvido_v2 o get_public_olvido (autorizada para escaneos anónimos de QR)
+  try {
+    let { data, error } = await supabaseClient
+      .rpc('get_public_olvido_v2', { target_id: safeId });
+
+    if (error) {
+      const fallbackRpc = await supabaseClient
+        .rpc('get_public_olvido', { target_id: safeId });
+      data = fallbackRpc.data;
+      error = fallbackRpc.error;
+    }
+
+    if (!error && Array.isArray(data)) {
+      if (data.length > 0) {
+        return { data: data[0], error: null };
+      }
+      return { data: null, error: null }; // Objeto no encontrado con ese ID
+    }
+  } catch (rpcErr) {
+    console.warn("Excepción al llamar RPC de olvido público:", rpcErr);
+  }
+
+  // 2. Fallback a consulta directa sobre la tabla (cuando el operador está autenticado)
+  try {
+    const res = await supabaseClient
+      .from("olvidos")
+      .select("*")
+      .eq("id", safeId)
+      .maybeSingle();
+
+    return res;
+  } catch (err) {
+    return { data: null, error: err };
+  }
 }
 
 let realtimeChannel = null;

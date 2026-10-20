@@ -221,28 +221,44 @@ async function abrirModalQR(id) {
   const modal = document.getElementById("modalQR");
   const canvasQR = document.getElementById("canvasQR");
   const details = document.getElementById("qrDetails");
+  const directInput = document.getElementById("qrDirectInput");
+  const openLink = document.getElementById("qrOpenLink");
 
   if (!modal || !canvasQR || !details) return;
 
+  const safeId = parseInt(registro.id, 10);
   const fH = new Date(registro.created_at).toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric' });
   
-  // Create a URL pointing to the new view.html page with the item's ID
-  const qrUrl = `${window.location.origin}/view.html?id=${registro.id}`;
+  // URL robusta y absoluta compatible con subdominios y rutas locales
+  let qrUrl = "";
+  if (!window.location.origin || window.location.origin === "null" || window.location.protocol === "file:") {
+    qrUrl = `https://lost-and-found-hotel.onrender.com/view.html?id=${safeId}`;
+  } else {
+    try {
+      const u = new URL('view.html', window.location.href);
+      u.searchParams.set('id', safeId);
+      qrUrl = u.href;
+    } catch {
+      qrUrl = `${window.location.origin}/view.html?id=${safeId}`;
+    }
+  }
   
   new QRious({
     element: canvasQR,
     value: qrUrl,
-    size: 250,
-    background: 'white',
-    foreground: 'black',
+    size: 220,
+    background: '#ffffff',
+    foreground: '#020617',
     level: 'H'
   });
+
+  if (directInput) directInput.value = qrUrl;
+  if (openLink) openLink.href = qrUrl;
 
   const safeObjeto = escapeHTML(registro.objeto);
   const safeHab = escapeHTML(registro.habitacion || "S/D");
   const safeSector = escapeHTML(registro.sector || "S/D");
   const safePrioridad = escapeHTML(registro.prioridad || "Baja");
-  const safeId = parseInt(registro.id, 10);
 
   details.innerHTML = `
     <div style="font-size: 16px; font-weight: 800; color: var(--primary); margin-bottom: 8px;">${safeObjeto}</div>
@@ -258,6 +274,31 @@ async function abrirModalQR(id) {
   modal.style.display = "flex";
 }
 
+function copiarEnlaceQR() {
+  const directInput = document.getElementById("qrDirectInput");
+  const btnCopy = document.getElementById("btnCopyQR");
+  if (!directInput || !directInput.value) return;
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(directInput.value).then(() => {
+      showToast("Enlace del QR copiado al portapapeles", "success");
+      if (btnCopy) {
+        const originalText = btnCopy.innerText;
+        btnCopy.innerText = "¡Copiado!";
+        setTimeout(() => { btnCopy.innerText = originalText; }, 2000);
+      }
+    }).catch(() => {
+      directInput.select();
+      document.execCommand('copy');
+      showToast("Enlace copiado", "success");
+    });
+  } else {
+    directInput.select();
+    document.execCommand('copy');
+    showToast("Enlace copiado", "success");
+  }
+}
+
 function cerrarModalQR() {
   const modal = document.getElementById("modalQR");
   if (modal) modal.style.display = "none";
@@ -271,6 +312,7 @@ function imprimirQR() {
 window.lostFound = {
   entregar,
   abrirModalQR,
+  copiarEnlaceQR,
   eliminar,
   verGrande,
   cerrarGrande,

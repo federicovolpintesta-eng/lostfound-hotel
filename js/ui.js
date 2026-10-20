@@ -326,7 +326,7 @@ export function render() {
           <th style="cursor:pointer" onclick="window.lostFound.sortTable('habitacion')">UBICACIÓN ${getSortIcon('habitacion')}</th>
           <th style="cursor:pointer" onclick="window.lostFound.sortTable('objeto')">OBJETO ${getSortIcon('objeto')}</th>
           <th style="cursor:pointer" onclick="window.lostFound.sortTable('nombre_entrega')">RECIBIÓ ${getSortIcon('nombre_entrega')}</th>
-          <th>FOTO</th>
+          <th style="cursor:pointer" onclick="window.lostFound.sortTable('sector')">SECTOR ${getSortIcon('sector')}</th>
           <th>FECHA ENTREGA</th>
           <th style="text-align:center">ETIQUETA</th>
         </tr>`;
@@ -362,7 +362,7 @@ export function render() {
 
         const img = safeImg 
           ? `<img src="${safeImg}" class="img-thumbnail" loading="lazy" onclick="window.lostFound.verGrande('${escapeHTML(safeImg)}')">` 
-          : "<div style='width:48px;height:48px;background:rgba(0,0,0,0.3);border:1px solid var(--glass-border);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:10px;'>Sin Foto</div>";
+          : `<div class="table-no-photo-badge" title="Sin fotografía adjunta"><span>📷</span></div>`;
 
         if (r.prioridad === "Alta") tr.classList.add('priority-high');
 
@@ -387,13 +387,14 @@ export function render() {
               fE = d.toLocaleDateString('es-AR');
             }
           }
+          // En historial se remueve la columna FOTO para no mostrar "Sin Foto" y optimizar la lista
           tr.innerHTML = `
             <td style="color:var(--text-muted); font-size:13px; white-space:nowrap;">${fH}</td>
             <td style="font-weight:600">${safeHab}</td>
             <td style="font-weight:600; color:var(--primary)">${safeObjeto}</td>
-            <td style="font-weight:700; color:var(--navy)">${safeNombreEntrega}</td>
-            <td>${img}</td>
-            <td>${fE}</td>
+            <td style="font-weight:600; color:var(--success)">${safeNombreEntrega}</td>
+            <td style="font-size:13px; color:var(--text-muted)">${safeSector}</td>
+            <td style="color:var(--text-muted); font-size:13px; white-space:nowrap;">${fE}</td>
             <td class="action-buttons-wrapper" style="justify-content:center">
               <button onclick="window.lostFound.abrirModalQR(${safeId})" class="btn-action-table btn-qr-table" title="Ver QR" style="background:rgba(255,255,255,0.05);color:var(--text-main);border:1px solid var(--glass-border);padding:6px 10px;border-radius:6px;cursor:pointer;">🏷️</button>
               <button onclick="window.lostFound.eliminar(${safeId})" class="btn-action-table btn-delete-table" title="Eliminar">🗑️</button>
@@ -426,7 +427,7 @@ export function render() {
         const badge = `<span style="font-size:12px; padding:6px 10px; border-radius:12px; background:${r.prioridad==='Alta'?'rgba(239,68,68,0.2)':r.prioridad==='Media'?'rgba(245,158,11,0.2)':'rgba(255,255,255,0.05)'}; color:${r.prioridad==='Alta'?'#fca5a5':r.prioridad==='Media'?'#fcd34d':'#cbd5e1'}; font-weight:600;">${safePrio}</span>`;
         const fotoCard = safeImg 
           ? `<img src="${safeImg}" class="card-img" onclick="window.lostFound.verGrande('${escapeHTML(safeImg)}')">`
-          : `<div style="height:100%; display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:12px;"><span style="font-size:2rem;margin-bottom:8px;display:block">📷</span>Sin Foto</div>`;
+          : `<div class="card-no-photo-subtle"><span>📷</span><span>Sin fotografía adjunta</span></div>`;
 
         if (r.prioridad === "Alta") card.classList.add('priority-high');
 
@@ -461,6 +462,8 @@ export function render() {
               <button onclick="window.lostFound.eliminar(${safeId})" class="btn-action-table btn-delete-table" style="flex:1" title="Eliminar">🗑️</button>
             </div>`;
         } else {
+          // Vista especializada para objetos entregados: sin caja de foto
+          card.className = "object-card glass-panel card-delivered";
           let fE = "-";
           if (r.fecha_entrega) {
             const d = new Date(r.fecha_entrega);
@@ -469,18 +472,21 @@ export function render() {
             }
           }
           card.innerHTML = `
-            <div class="card-img-container">
-              ${fotoCard}
-              <span class="card-room">${safeHabitacionTexto}</span>
-              <div class="card-badge-wrapper">${badge}</div>
+            <div class="card-delivered-header">
+              <span class="badge-delivered">✓ Entregado</span>
+              <span class="card-room-pill">${safeHabitacionTexto}</span>
             </div>
             <div class="card-body">
-              <h4 class="card-title" style="color:var(--primary);">${safeObjeto}</h4>
-              <p class="card-detail">👤 <span><strong>Recibió:</strong> ${safeNombreEntrega}</span></p>
-              <p class="card-detail">📅 <span><strong>Entrega:</strong> ${fE}</span></p>
+              <h4 class="card-title" style="color:var(--primary); margin-bottom:10px;">${safeObjeto}</h4>
+              <div class="card-delivered-meta">
+                <p class="card-detail">👤 <span><strong>Recibió:</strong> <strong style="color:var(--success); font-weight:600;">${safeNombreEntrega}</strong></span></p>
+                <p class="card-detail">📍 <span><strong>Sector:</strong> ${safeSector}</span></p>
+                <p class="card-detail">📅 <span><strong>Hallazgo:</strong> ${fH}</span></p>
+                <p class="card-detail">🤝 <span><strong>Entregado:</strong> ${fE}</span></p>
+              </div>
             </div>
             <div class="card-footer">
-              <button onclick="window.lostFound.abrirModalQR(${safeId})" class="btn-action-table" style="flex:3;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);color:var(--text-main);" title="Ver QR">🏷️ Ver QR</button>
+              <button onclick="window.lostFound.abrirModalQR(${safeId})" class="btn-action-table" style="flex:3;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);color:var(--text-main);" title="Ver QR">🏷️ Ver Etiqueta QR</button>
               <button onclick="window.lostFound.eliminar(${safeId})" class="btn-action-table btn-delete-table" style="flex:1" title="Eliminar">🗑️</button>
             </div>`;
         }

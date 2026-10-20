@@ -66,24 +66,39 @@
 
         <div class="content">
             <div class="stats-row">
-                <div class="stat-card glass-panel blue">
-                    <span class="stat-label">TOTAL REGISTROS</span>
+                <div class="stat-card glass-panel">
+                    <div class="stat-card-top">
+                        <span class="stat-label">TOTAL REGISTROS</span>
+                        <span class="stat-icon" title="Total de Registros">📦</span>
+                    </div>
                     <h2 class="stat-value" id="totalObjetos">0</h2>
                 </div>
-                <div class="stat-card glass-panel yellow">
-                    <span class="stat-label">EN CUSTODIA</span>
+                <div class="stat-card glass-panel">
+                    <div class="stat-card-top">
+                        <span class="stat-label">EN CUSTODIA</span>
+                        <span class="stat-icon" title="En Custodia" style="color:var(--primary)">⏳</span>
+                    </div>
                     <h2 class="stat-value" id="enCustodiaCount">0</h2>
                 </div>
-                <div class="stat-card glass-panel green">
-                    <span class="stat-label">EFICACIA DEVOLUCIÓN</span>
+                <div class="stat-card glass-panel">
+                    <div class="stat-card-top">
+                        <span class="stat-label">EFICACIA DEVOLUCIÓN</span>
+                        <span class="stat-icon" title="Tasa de Devolución" style="color:var(--success)">📈</span>
+                    </div>
                     <h2 class="stat-value" id="tasaRetorno">0%</h2>
                 </div>
-                <div class="stat-card glass-panel cyan">
-                    <span class="stat-label">ENTREGADOS</span>
+                <div class="stat-card glass-panel">
+                    <div class="stat-card-top">
+                        <span class="stat-label">ENTREGADOS</span>
+                        <span class="stat-icon" title="Entregados Exitosamente" style="color:var(--success)">🤝</span>
+                    </div>
                     <h2 class="stat-value" id="entregadosCount">0</h2>
                 </div>
-                <div class="stat-card glass-panel red">
-                    <span class="stat-label">OBJETOS CRÍTICOS</span>
+                <div class="stat-card glass-panel">
+                    <div class="stat-card-top">
+                        <span class="stat-label">OBJETOS CRÍTICOS</span>
+                        <span class="stat-icon" title="Críticos o +90 días" style="color:var(--danger)">⚠️</span>
+                    </div>
                     <h2 class="stat-value" id="donacionCount">0</h2>
                 </div>
                 <div class="stat-card-chart glass-panel">
@@ -196,10 +211,15 @@
             </div>
             <div class="qr-modal-body" style="display:flex; flex-direction:column; align-items:center; text-align:center; padding:10px 0;">
                 <div class="qr-container-box" style="background:white; padding:16px; border-radius:12px; margin-bottom:16px; display:inline-flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.15);">
-                    <canvas id="canvasQR" style="width:180px; height:180px;"></canvas>
+                    <canvas id="canvasQR" width="220" height="220" style="width:190px; height:190px; display:block;"></canvas>
                 </div>
                 <div id="qrDetails" class="qr-details" style="color:var(--text-main); font-size:14px; line-height:1.6; width:100%;">
                     <!-- Detalles dinámicos para imprimir -->
+                </div>
+                <div id="qrDirectLinkWrapper" class="qr-direct-link-container hide-on-print">
+                    <input id="qrDirectInput" class="qr-direct-link" readonly value="" title="URL directa del objeto">
+                    <button id="btnCopyQR" class="btn-qr-copy" onclick="window.lostFound.copiarEnlaceQR()" title="Copiar enlace para compartir">Copiar Link</button>
+                    <a id="qrOpenLink" href="#" target="_blank" class="btn-qr-copy" title="Abrir ficha en nueva pestaña" style="text-decoration:none; display:inline-flex; align-items:center;">Abrir ↗</a>
                 </div>
             </div>
             <div class="custom-modal-footer hide-on-print" style="margin-top:20px; display:flex; justify-content:flex-end; gap:16px;">

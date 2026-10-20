@@ -25,3 +25,6 @@ env/
 # OS specific
 .DS_Store
 Thumbs.db
+
+# Generated binary documents
+*.pdf

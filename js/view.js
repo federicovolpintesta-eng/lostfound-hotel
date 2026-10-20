@@ -9,7 +9,7 @@ async function init() {
   const id = urlParams.get('id');
 
   if (!id) {
-    showError("Error: El código QR no contiene un ID válido.");
+    showError("Código QR incompleto: No se encontró ningún identificador de objeto en el enlace.");
     return;
   }
 
@@ -17,20 +17,20 @@ async function init() {
     const { data, error } = await obtenerOlvidoPorId(id);
     
     if (error) {
-      console.error(error);
-      showError("Error de BD: " + error.message);
+      console.error("Error al obtener objeto:", error);
+      showError("No fue posible consultar el registro en la base de datos (" + (error.message || "Error de conexión") + ").");
       return;
     }
     
     if (!data) {
-      showError("No se encontró ningún objeto con este ID.");
+      showError("No se encontró ningún objeto registrado con el ID #" + id);
       return;
     }
 
     renderData(data);
   } catch (err) {
-    console.error(err);
-    showError("Error inesperado: " + err.message);
+    console.error("Excepción en view.js:", err);
+    showError("Error inesperado al cargar la información: " + err.message);
   }
 }
 
@@ -41,7 +41,13 @@ init();
 function showError(msg) {
   const loading = document.getElementById("loadingContainer");
   if (loading) {
-    loading.innerHTML = `<div class="view-card glass-panel" style="text-align: center;"><h2 style="color: var(--danger);">${escapeHTML(msg)}</h2></div>`;
+    loading.innerHTML = `
+      <div class="view-card glass-panel" style="text-align: center; padding: 40px 24px;">
+        <div style="font-size: 40px; margin-bottom: 16px;">⚠️</div>
+        <h2 style="color: var(--danger); font-size: 20px; font-weight: 700; margin-bottom: 10px;">No fue posible cargar el registro</h2>
+        <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px; line-height: 1.5;">${escapeHTML(msg)}</p>
+        <button onclick="location.reload()" style="background: var(--primary); color: #020617; padding: 10px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; font-size: 14px;">Reintentar</button>
+      </div>`;
   }
 }
 
@@ -63,8 +69,18 @@ function renderData(registro) {
   let imageHtml = "";
   if (safeImg) {
     imageHtml = `<img src="${safeImg}" alt="${safeObjeto}" class="view-image">`;
+  } else if (registro.entregado) {
+    imageHtml = `
+      <div style="text-align:center; padding: 24px; background: rgba(16, 185, 129, 0.05); border-radius: 12px; border: 1px dashed rgba(16, 185, 129, 0.25); color: var(--text-muted); font-size: 13px;">
+        <span style="font-size: 24px; display: block; margin-bottom: 6px; color: var(--success);">✓</span>
+        Objeto entregado y cerrado (almacenamiento de imagen optimizado)
+      </div>`;
   } else {
-    imageHtml = `<div style="text-align:center; padding: 40px; background: rgba(255,255,255,0.05); border-radius: 12px; border: 1px dashed var(--glass-border); color: var(--text-muted);">Sin fotografía adjunta</div>`;
+    imageHtml = `
+      <div style="text-align:center; padding: 28px; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px dashed var(--glass-border); color: var(--text-muted); font-size: 13px;">
+        <span style="font-size: 24px; display: block; margin-bottom: 6px; opacity: 0.5;">📷</span>
+        Sin fotografía adjunta
+      </div>`;
   }
 
   const statusClass = registro.entregado ? "status-entregado" : "status-custodia";
