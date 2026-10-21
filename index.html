@@ -69,37 +69,62 @@
                 <div class="stat-card glass-panel">
                     <div class="stat-card-top">
                         <span class="stat-label">TOTAL REGISTROS</span>
-                        <span class="stat-icon" title="Total de Registros">📦</span>
+                        <div class="stat-icon icon-blue" title="Total de Registros">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                        </div>
                     </div>
-                    <h2 class="stat-value" id="totalObjetos">0</h2>
+                    <div class="stat-card-main">
+                        <h2 class="stat-value" id="totalObjetos">0</h2>
+                        <span class="stat-subtext">Inventario global</span>
+                    </div>
                 </div>
                 <div class="stat-card glass-panel">
                     <div class="stat-card-top">
                         <span class="stat-label">EN CUSTODIA</span>
-                        <span class="stat-icon" title="En Custodia" style="color:var(--primary)">⏳</span>
+                        <div class="stat-icon icon-amber" title="En Custodia Activa">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                        </div>
                     </div>
-                    <h2 class="stat-value" id="enCustodiaCount">0</h2>
+                    <div class="stat-card-main">
+                        <h2 class="stat-value" id="enCustodiaCount">0</h2>
+                        <span class="stat-subtext">En depósito</span>
+                    </div>
                 </div>
                 <div class="stat-card glass-panel">
                     <div class="stat-card-top">
-                        <span class="stat-label">EFICACIA DEVOLUCIÓN</span>
-                        <span class="stat-icon" title="Tasa de Devolución" style="color:var(--success)">📈</span>
+                        <span class="stat-label">EFICACIA RETORNO</span>
+                        <div class="stat-icon icon-emerald" title="Tasa de Devolución">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                        </div>
                     </div>
-                    <h2 class="stat-value" id="tasaRetorno">0%</h2>
+                    <div class="stat-card-main">
+                        <h2 class="stat-value" id="tasaRetorno">0%</h2>
+                        <span class="stat-subtext">Tasa de entrega</span>
+                    </div>
                 </div>
                 <div class="stat-card glass-panel">
                     <div class="stat-card-top">
                         <span class="stat-label">ENTREGADOS</span>
-                        <span class="stat-icon" title="Entregados Exitosamente" style="color:var(--success)">🤝</span>
+                        <div class="stat-icon icon-violet" title="Objetos Restituidos">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                        </div>
                     </div>
-                    <h2 class="stat-value" id="entregadosCount">0</h2>
+                    <div class="stat-card-main">
+                        <h2 class="stat-value" id="entregadosCount">0</h2>
+                        <span class="stat-subtext">Restituidos</span>
+                    </div>
                 </div>
                 <div class="stat-card glass-panel">
                     <div class="stat-card-top">
                         <span class="stat-label">OBJETOS CRÍTICOS</span>
-                        <span class="stat-icon" title="Críticos o +90 días" style="color:var(--danger)">⚠️</span>
+                        <div class="stat-icon icon-rose" title="Críticos o +90 días">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                        </div>
                     </div>
-                    <h2 class="stat-value" id="donacionCount">0</h2>
+                    <div class="stat-card-main">
+                        <h2 class="stat-value" id="donacionCount">0</h2>
+                        <span class="stat-subtext">Atención</span>
+                    </div>
                 </div>
                 <div class="stat-card-chart glass-panel">
                     <div class="chart-container">

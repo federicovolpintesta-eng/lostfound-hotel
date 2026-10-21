@@ -58,71 +58,98 @@ function renderData(registro) {
   const dataCard = document.getElementById("dataCard");
   const fH = new Date(registro.created_at).toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
   
+  let fE = "-";
+  if (registro.fecha_entrega) {
+    const d = new Date(registro.fecha_entrega);
+    if (!isNaN(d.getTime())) {
+      fE = d.toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    }
+  }
+
   const safeImg = sanitizeUrl(registro.imagen);
   const safeObjeto = escapeHTML(registro.objeto);
   const safeHabitacion = escapeHTML(registro.habitacion || "No especificada");
   const safeSector = escapeHTML(registro.sector || "No especificado");
   const safePrioridad = escapeHTML(registro.prioridad || "Baja");
-  const safeNombreEntrega = escapeHTML(registro.nombre_entrega || "No registrado");
+  const safeNombreEntrega = escapeHTML(registro.nombre_entrega || "Titular no registrado");
   const safeId = parseInt(registro.id, 10);
+
+  // Status Banner (Entregado vs En Custodia)
+  let statusBannerHtml = "";
+  if (registro.entregado) {
+    statusBannerHtml = `
+      <div class="state-banner state-delivered">
+        <div class="state-badge-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
+        <div class="state-badge-content">
+          <div class="state-badge-title">OBJETO ENTREGADO</div>
+          <div class="state-badge-desc">Restituido exitosamente por el departamento de Gobernanza</div>
+        </div>
+      </div>
+    `;
+  } else {
+    statusBannerHtml = `
+      <div class="state-banner state-custody">
+        <div class="state-badge-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+        </div>
+        <div class="state-badge-content">
+          <div class="state-badge-title">EN CUSTODIA OFICIAL</div>
+          <div class="state-badge-desc">Bajo resguardo en Recepción / Ama de Llaves</div>
+        </div>
+      </div>
+    `;
+  }
 
   let imageHtml = "";
   if (safeImg) {
     imageHtml = `<img src="${safeImg}" alt="${safeObjeto}" class="view-image">`;
-  } else if (registro.entregado) {
-    imageHtml = `
-      <div style="text-align:center; padding: 24px; background: rgba(16, 185, 129, 0.05); border-radius: 12px; border: 1px dashed rgba(16, 185, 129, 0.25); color: var(--text-muted); font-size: 13px;">
-        <span style="font-size: 24px; display: block; margin-bottom: 6px; color: var(--success);">✓</span>
-        Objeto entregado y cerrado (almacenamiento de imagen optimizado)
-      </div>`;
-  } else {
-    imageHtml = `
-      <div style="text-align:center; padding: 28px; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px dashed var(--glass-border); color: var(--text-muted); font-size: 13px;">
-        <span style="font-size: 24px; display: block; margin-bottom: 6px; opacity: 0.5;">📷</span>
-        Sin fotografía adjunta
-      </div>`;
   }
 
-  const statusClass = registro.entregado ? "status-entregado" : "status-custodia";
-  const statusText = registro.entregado ? "ENTREGADO" : "EN CUSTODIA";
-
-  const prioridadColor = registro.prioridad === 'Alta' ? '#fca5a5' : registro.prioridad === 'Media' ? '#fcd34d' : '#cbd5e1';
+  const prioridadColor = registro.prioridad === 'Alta' ? '#fca5a5' : registro.prioridad === 'Media' ? '#fcd34d' : '#94a3b8';
 
   dataCard.innerHTML = `
     <h1 class="view-title">${safeObjeto}</h1>
-    <div style="text-align: center;">
-        <span class="status-badge ${statusClass}">${statusText}</span>
-    </div>
+    
+    ${statusBannerHtml}
     
     ${imageHtml}
 
     <div class="view-details">
+        ${registro.entregado ? `
+        <div class="detail-item full-width detail-recipient">
+            <div class="detail-label">Entregado Oficialmente a</div>
+            <div class="detail-value detail-value-recipient">${safeNombreEntrega}</div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:3px;">Fecha de restitución: ${fE}</div>
+        </div>
+        ` : ''}
+
         <div class="detail-item">
-            <div class="detail-label">ID Registro</div>
+            <div class="detail-label">ID Identificador</div>
             <div class="detail-value">#${safeId}</div>
         </div>
         <div class="detail-item">
-            <div class="detail-label">Fecha y Hora de Hallazgo</div>
-            <div class="detail-value">${fH}</div>
+            <div class="detail-label">Prioridad de Custodia</div>
+            <div class="detail-value" style="color: ${prioridadColor}">${safePrioridad}</div>
         </div>
         <div class="detail-item">
             <div class="detail-label">Habitación / Ubicación</div>
             <div class="detail-value">${safeHabitacion}</div>
         </div>
         <div class="detail-item">
-            <div class="detail-label">Sector</div>
+            <div class="detail-label">Sector del Hotel</div>
             <div class="detail-value">${safeSector}</div>
         </div>
-        <div class="detail-item">
-            <div class="detail-label">Prioridad</div>
-            <div class="detail-value" style="color: ${prioridadColor}">${safePrioridad}</div>
+        <div class="detail-item full-width">
+            <div class="detail-label">Fecha y Hora de Hallazgo</div>
+            <div class="detail-value">${fH}</div>
         </div>
-        ${registro.entregado ? `
-        <div class="detail-item">
-            <div class="detail-label">Entregado a</div>
-            <div class="detail-value" style="color: var(--success);">${safeNombreEntrega}</div>
-        </div>
-        ` : ''}
+    </div>
+
+    <div class="official-seal-box">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+      <span>Registro Oficial Los Pinos Resort &amp; Spa Termal &bull; Sistema Lost &amp; Found</span>
     </div>
   `;
 }

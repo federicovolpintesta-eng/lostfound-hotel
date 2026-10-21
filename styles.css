@@ -258,38 +258,42 @@ body {
 /* MÉTRICAS */
 .stats-row { 
     display: grid; 
-    grid-template-columns: repeat(5, 1fr) 1.35fr; 
-    gap: 18px; 
-    padding: 28px 32px; 
+    grid-template-columns: repeat(5, 1fr) 1.25fr; 
+    gap: 16px; 
+    padding: 24px 32px 16px; 
+    align-items: stretch;
 }
 .stat-card { 
-    padding: 20px 22px; 
+    padding: 16px 20px; 
     border-radius: 16px;
     border: 1px solid var(--glass-border);
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(20px);
     display: flex; 
     flex-direction: column; 
     justify-content: space-between; 
-    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    min-height: 110px;
+    max-height: 126px;
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 .stat-card:hover {
-    transform: translateY(-3px);
+    transform: translateY(-2px);
     border-color: var(--glass-border-highlight);
-    background: var(--glass-bg-hover);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.22);
+    background: rgba(15, 23, 42, 0.65);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 }
 
 .stat-card-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 14px;
+    margin-bottom: 4px;
 }
 
 .stat-label { 
-    font-size: 11px; 
-    font-weight: 600; 
+    font-size: 10.5px; 
+    font-weight: 700; 
     color: var(--text-muted); 
     text-transform: uppercase; 
     letter-spacing: 0.8px;
@@ -297,46 +301,75 @@ body {
 }
 
 .stat-icon {
-    font-size: 15px;
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
     border-radius: 8px;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid var(--glass-border);
     display: flex;
     align-items: center;
     justify-content: center;
-    opacity: 0.85;
+    border: 1px solid var(--glass-border);
+    flex-shrink: 0;
+}
+.stat-icon svg {
+    width: 15px;
+    height: 15px;
+}
+.stat-icon.icon-blue { color: #38bdf8; background: rgba(56, 189, 248, 0.12); border-color: rgba(56, 189, 248, 0.25); }
+.stat-icon.icon-amber { color: #fbbf24; background: rgba(251, 191, 36, 0.12); border-color: rgba(251, 191, 36, 0.25); }
+.stat-icon.icon-emerald { color: #34d399; background: rgba(52, 211, 153, 0.12); border-color: rgba(52, 211, 153, 0.25); }
+.stat-icon.icon-violet { color: #c084fc; background: rgba(192, 132, 252, 0.12); border-color: rgba(192, 132, 252, 0.25); }
+.stat-icon.icon-rose { color: #f87171; background: rgba(248, 113, 113, 0.12); border-color: rgba(248, 113, 113, 0.25); }
+
+.stat-card-main {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
 }
 
 .stat-value { 
     margin: 0; 
-    font-size: 36px; 
-    font-weight: 700; 
+    font-size: 30px; 
+    font-weight: 800; 
     color: var(--text-heading); 
-    line-height: 1.1;
+    line-height: 1;
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.02em;
 }
 
+.stat-subtext {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
 /* TARJETA DE GRÁFICO */
 .stat-card-chart { 
-    padding: 24px; 
+    padding: 12px 18px; 
+    border-radius: 16px;
+    min-height: 110px;
+    max-height: 126px;
     display: flex; 
     align-items: center; 
     justify-content: space-between;
-    gap: 24px; 
+    gap: 16px; 
 }
-.chart-container { width: 110px; height: 110px; }
+.chart-container { 
+    width: 80px; 
+    height: 80px; 
+    flex-shrink: 0;
+}
 .chart-legend { 
-    font-size: 13px; 
+    font-size: 11px; 
     color: var(--text-muted); 
     display: flex; 
     flex-direction: column; 
-    gap: 8px; 
+    gap: 3px; 
+    overflow: hidden;
 }
-.legend-item { display: flex; align-items: center; gap: 10px; font-weight: 500;}
-.legend-color { width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 0 5px rgba(255,255,255,0.2); }
+.legend-item { display: flex; align-items: center; gap: 6px; font-weight: 500; white-space: nowrap; }
+.legend-color { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
 /* FORMULARIO */
 .form-strip { 
@@ -1242,6 +1275,15 @@ tr.priority-high { animation: pulse-danger-dark 2s infinite; background: rgba(23
     border: 1px solid rgba(15, 23, 42, 0.08);
     color: #0f172a;
     box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .stat-card {
+    background: rgba(255, 255, 255, 0.75);
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+}
+[data-theme="light"] .stat-card:hover {
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
 }
 
 
